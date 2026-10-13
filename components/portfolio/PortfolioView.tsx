@@ -162,7 +162,7 @@ export function PortfolioView() {
                     onClick={() => setRange(r)}
                     className={cn(
                       "h-8 min-w-[2.75rem] rounded-md px-2.5 text-xs font-semibold transition-colors duration-150",
-                      range === r ? "bg-forest-800 text-white" : "text-ink-muted hover:bg-green-50 hover:text-ink",
+                      range === r ? "bg-green-600 text-white" : "text-ink-muted hover:bg-green-50 hover:text-ink",
                     )}
                   >
                     {r === "ALL" ? "ALL" : r}

@@ -61,7 +61,7 @@ export function AnalyticsCards() {
           ariaLabel={`${index} vegetation index trend from June to November`}
           data={series}
           xKey="month"
-          series={[{ key: "value", name: index, color: "#367C3B", area: true }]}
+          series={[{ key: "value", name: index, color: "#2F7D3B", area: true }]}
           yDomain={[0.4, 1]}
           yTicks={[0.4, 0.6, 0.8, 1]}
           tooltipFormat={(v) => v.toFixed(2)}

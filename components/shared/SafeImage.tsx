@@ -44,7 +44,7 @@ export function SafeImage({ src, alt, category = "coffee", className, imgClassNa
         className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-forest-700 via-forest-800 to-green-600"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px), linear-gradient(135deg,#0E513D,#063B2E 55%,#367C3B)",
+            "repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px), linear-gradient(135deg,#0E513D,#063B2E 55%,#2F7D3B)",
         }}
       >
         <Icon className="h-10 w-10 text-white/35" strokeWidth={1.25} />

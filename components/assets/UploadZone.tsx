@@ -63,7 +63,7 @@ export function UploadZone({
         }}
         className={cn(
           "relative flex flex-col items-center rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors duration-150",
-          dragging ? "border-green-600 bg-green-50" : "border-line bg-ivory/60 hover:bg-green-50/60",
+          dragging ? "border-green-600 bg-green-50" : "border-line bg-white hover:bg-green-50/60",
         )}
       >
         <UploadCloud className="h-8 w-8 text-green-600" aria-hidden="true" />

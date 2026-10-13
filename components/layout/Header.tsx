@@ -36,7 +36,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
   const { label: roleLabel } = useRole();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-ivory/90 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-line bg-white">
       <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6 xl:px-8">
         <button
           type="button"
@@ -73,7 +73,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
                 className="relative rounded-lg p-2.5 text-ink transition-colors hover:bg-green-50"
               >
                 <Bell className="h-[18px] w-[18px]" />
-                {unread && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger ring-2 ring-ivory" />}
+                {unread && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger ring-2 ring-white" />}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-80">

@@ -166,7 +166,7 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
         <p className="mt-1 text-sm text-ink-muted">Base-case fair value</p>
         <div className="mt-6">
           <div className="relative h-2 rounded-full bg-green-100">
-            <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-gradient-to-r from-sage/40 to-green-600/70" style={{ background: "linear-gradient(90deg,#BFD9A8,#367C3B)" }} />
+            <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-gradient-to-r from-sage/40 to-green-600/70" style={{ background: "linear-gradient(90deg,#BFD9A8,#2F7D3B)" }} />
             <span className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-forest-800 shadow-card" style={{ left: `${pos}%` }} aria-hidden="true" />
           </div>
           <div className="figure mt-2 flex justify-between text-xs text-ink-muted">
@@ -190,7 +190,7 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
             ariaLabel="Seven-month valuation trend"
             data={series}
             xKey="month"
-            series={[{ key: "value", name: "Fair value", color: "#367C3B", area: true }]}
+            series={[{ key: "value", name: "Fair value", color: "#2F7D3B", area: true }]}
             yFormat={(v) => `$${v}M`}
             tooltipFormat={(v) => `$${v}M`}
             yDomain={["dataMin", "dataMax"]}

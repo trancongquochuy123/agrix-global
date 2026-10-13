@@ -33,7 +33,7 @@ export const assetValueGrowth = [
 export const dashboardAllocation = [
   { name: "Coffee", pct: 42, valueUsd: 53.9e6, color: "#5B3A29" },
   { name: "Rice", pct: 28, valueUsd: 36.0e6, color: "#D9B550" },
-  { name: "Durian", pct: 18, valueUsd: 23.1e6, color: "#367C3B" },
+  { name: "Durian", pct: 18, valueUsd: 23.1e6, color: "#2F7D3B" },
   { name: "Carbon", pct: 12, valueUsd: 15.4e6, color: "#8FC16B" },
 ];
 

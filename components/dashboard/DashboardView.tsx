@@ -107,7 +107,7 @@ export function DashboardView() {
               ariaLabel="Verified asset value growth from 2021 to 2024, reaching $128.4 million"
               data={assetValueGrowth}
               xKey="label"
-              series={[{ key: "value", name: "Asset value", color: "#367C3B", area: true }]}
+              series={[{ key: "value", name: "Asset value", color: "#2F7D3B", area: true }]}
               yFormat={(v) => `${v}M`}
               tooltipFormat={(v) => `$${v}M`}
               yTicks={[0, 40, 80, 120, 160]}

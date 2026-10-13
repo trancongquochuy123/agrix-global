@@ -29,7 +29,7 @@ export function ValuationPanel() {
           ariaLabel="Fair value trend over the last seven months"
           data={v.series}
           xKey="month"
-          series={[{ key: "value", name: "Fair value", color: "#367C3B", area: true }]}
+          series={[{ key: "value", name: "Fair value", color: "#2F7D3B", area: true }]}
           yFormat={(n) => `$${n}M`}
           tooltipFormat={(n) => `$${n}M`}
           yDomain={["dataMin", "dataMax"]}

@@ -3,7 +3,7 @@ import { useId } from "react";
 export function Sparkline({
   data,
   className,
-  color = "#367C3B",
+  color = "#2F7D3B",
   width = 84,
   height = 36,
 }: {

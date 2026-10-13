@@ -23,7 +23,7 @@ export const holdings: Holding[] = [
 export const allocation: AllocationSlice[] = [
   { name: "Coffee", pct: 32, valueUsd: 4_110_000, color: "#0E513D", image: IMAGES.coffee },
   { name: "Rice", pct: 24, valueUsd: 3_080_000, color: "#5F9F38", image: IMAGES.rice },
-  { name: "Carbon", pct: 18, valueUsd: 2_310_000, color: "#367C3B", image: IMAGES.mangrove },
+  { name: "Carbon", pct: 18, valueUsd: 2_310_000, color: "#2F7D3B", image: IMAGES.mangrove },
   { name: "Durian", pct: 14, valueUsd: 1_800_000, color: "#C4A35A", image: IMAGES.durian },
   { name: "Other", pct: 12, valueUsd: 1_540_000, color: "#DDE8D8", image: IMAGES.pepper },
 ];

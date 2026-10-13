@@ -23,12 +23,12 @@ export function SidebarFooter({ showCard = true, showUserText = true }: { showCa
         </div>
       )}
       <div className="flex items-center gap-3 rounded-xl px-1.5 py-1">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-bold text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-green-50 text-xs font-bold text-green-700">
           {currentUser.initials}
         </div>
         <div className={cn("min-w-0 leading-tight", !showUserText && "hidden")}>
-          <p className="truncate text-sm font-semibold text-white">{currentUser.name}</p>
-          <p className="text-xs text-white/60">{label}</p>
+          <p className="truncate text-sm font-semibold text-ink">{currentUser.name}</p>
+          <p className="text-xs text-ink-muted">{label}</p>
         </div>
       </div>
     </div>

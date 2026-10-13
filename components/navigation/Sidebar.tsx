@@ -16,22 +16,22 @@ export function Sidebar({ expanded, onToggle }: { expanded: boolean; onToggle: (
           type="button"
           aria-label="Collapse sidebar"
           onClick={onToggle}
-          className="fixed inset-0 z-30 hidden bg-forest-950/40 md:block xl:hidden"
+          className="fixed inset-0 z-30 hidden bg-forest-950/30 md:block xl:hidden"
         />
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden bg-forest-900 text-white transition-[width] duration-200 ease-out md:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-line bg-white text-ink transition-[width] duration-200 ease-out md:flex",
           expanded ? "w-60 shadow-pop" : "w-[72px] xl:w-60",
         )}
       >
-        <div className="flex h-16 items-center justify-between px-4">
+        <div className="flex h-16 shrink-0 items-center justify-between px-4">
           <Link href="/dashboard" aria-label="AGRIX home" className="flex items-center">
             <span className={cn(expanded ? "hidden" : "block xl:hidden")}>
               <LogoMark />
             </span>
             <span className={cn(expanded ? "block" : "hidden xl:block")}>
-              <Logo />
+              <Logo tone="dark" />
             </span>
           </Link>
           <button
@@ -39,7 +39,7 @@ export function Sidebar({ expanded, onToggle }: { expanded: boolean; onToggle: (
             onClick={onToggle}
             aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
             className={cn(
-              "rounded-md p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white xl:hidden",
+              "rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-50 hover:text-ink xl:hidden",
               !expanded && "hidden",
             )}
           >
@@ -51,7 +51,7 @@ export function Sidebar({ expanded, onToggle }: { expanded: boolean; onToggle: (
             type="button"
             onClick={onToggle}
             aria-label="Expand sidebar"
-            className="mx-auto mb-1 rounded-md p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white xl:hidden"
+            className="mx-auto mb-1 rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-50 hover:text-ink xl:hidden"
           >
             <PanelLeftOpen className="h-4 w-4" />
           </button>

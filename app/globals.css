@@ -8,16 +8,16 @@
     --forest-900: #0b241d;
     --forest-800: #063b2e;
     --forest-700: #0e513d;
-    --green-600: #367c3b;
+    --green-600: #2f7d3b;
     --green-500: #5f9f38;
     --green-100: #dde8d8;
-    --green-50: #eef4eb;
-    --ivory: #f5f5ef;
+    --green-50: #eaf3e9;
+    --ivory: #ffffff;
     --gold: #c4a35a;
     --gold-light: #e8d8ae;
-    --text-primary: #10211b;
-    --text-secondary: #66736d;
-    --border: #dde4df;
+    --text-primary: #14251f;
+    --text-secondary: #65736c;
+    --border: #e4eae5;
   }
 
   html {
@@ -25,7 +25,7 @@
   }
 
   body {
-    @apply bg-ivory font-sans text-ink antialiased;
+    @apply bg-white font-sans text-ink antialiased;
     overflow-x: hidden;
   }
 
@@ -34,7 +34,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid #367c3b;
+    outline: 2px solid #2f7d3b;
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -46,7 +46,7 @@
 
 @layer components {
   .card {
-    @apply rounded-card border border-line bg-white shadow-card;
+    @apply rounded-card border border-line bg-white;
   }
   .figure {
     @apply font-figures tabular-nums tracking-tight;
@@ -62,7 +62,7 @@
 /* Leaflet overrides */
 .leaflet-container {
   font-family: inherit;
-  background: #0f2a22;
+  background: #e8eee9;
 }
 .leaflet-popup-content-wrapper {
   border-radius: 12px;

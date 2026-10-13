@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 export const CHART = {
   forest: "#0E513D",
   forestDeep: "#063B2E",
-  green: "#367C3B",
+  green: "#2F7D3B",
   sage: "#8FC16B",
   sageLight: "#BFD9A8",
   gold: "#C4A35A",

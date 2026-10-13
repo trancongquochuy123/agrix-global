@@ -18,7 +18,7 @@ interface StatCardProps {
 export function StatCard({ icon, label, value, change, comparison, trend = "up", spark, tone = "green", className }: StatCardProps) {
   const TrendIcon = trend === "up" ? ArrowUpRight : ArrowDownRight;
   return (
-    <div className={cn("card flex items-start gap-4 p-4 sm:p-5", className)}>
+    <div className={cn("card flex items-start gap-4 overflow-hidden p-4 sm:p-5", className)}>
       <div
         className={cn(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
@@ -31,7 +31,7 @@ export function StatCard({ icon, label, value, change, comparison, trend = "up",
         <p className="text-sm text-ink-muted">{label}</p>
         <div className="mt-1 flex items-end justify-between gap-2">
           <p className="figure text-2xl font-bold leading-none text-ink sm:text-[28px]">{value}</p>
-          {spark && <Sparkline data={spark} className="hidden shrink-0 sm:block" />}
+          {spark && <Sparkline data={spark} className="hidden shrink-0 sm:block xl:hidden min-[1500px]:block" />}
         </div>
         {(change || comparison) && (
           <p className="mt-2 flex flex-wrap items-center gap-x-1.5 text-xs">

@@ -194,7 +194,7 @@ export function MarketplaceView() {
           onClick={() => setView(id)}
           className={cn(
             "inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-            view === id ? "bg-forest-800 text-white" : "text-ink hover:bg-green-50",
+            view === id ? "bg-green-600 text-white" : "text-ink hover:bg-green-50",
           )}
         >
           <Icon className="h-4 w-4" aria-hidden="true" />

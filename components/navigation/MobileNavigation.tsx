@@ -9,12 +9,12 @@ import { SidebarFooter } from "./SidebarFooter";
 export function MobileNavigation({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent variant="drawer" className="flex flex-col bg-forest-900 text-white [&>button]:text-white/70 [&>button:hover]:bg-white/10 [&>button:hover]:text-white">
+      <DialogContent variant="drawer" className="flex flex-col bg-white text-ink">
         <DialogTitle className="sr-only">Main navigation</DialogTitle>
         <DialogDescription className="sr-only">Navigate between AGRIX sections</DialogDescription>
-        <div className="flex h-16 items-center px-4">
+        <div className="flex h-16 shrink-0 items-center px-4">
           <Link href="/dashboard" onClick={() => onOpenChange(false)} aria-label="AGRIX home">
-            <Logo />
+            <Logo tone="dark" />
           </Link>
         </div>
         <div className="px-3 pt-2">
