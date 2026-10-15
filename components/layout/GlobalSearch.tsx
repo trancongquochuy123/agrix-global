@@ -3,11 +3,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Search } from "lucide-react";
-import { assets } from "@/data/assets";
 import { categoryLabel } from "@/lib/categories";
+import { useDemo } from "@/lib/demo/hooks";
+import { marketBase } from "@/lib/demo/routes";
+import type { Role } from "@/lib/demo/types";
+import type { Asset } from "@/types/asset";
 
-export function GlobalSearch() {
+/** Investors browse the marketplace; sellers jump to their own assets; admins to the review page. */
+function hrefFor(role: Role, a: Asset) {
+  if (role === "seller") return `/seller/assets/${a.id}`;
+  if (role === "admin") return `/admin/approvals/${a.id}`;
+  return `${marketBase(role)}/${a.slug}`;
+}
+
+export function GlobalSearch({ role }: { role: Role }) {
   const router = useRouter();
+  const { assets: all, session } = useDemo();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -15,10 +26,11 @@ export function GlobalSearch() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return assets
+    const pool = role === "investor" ? all.filter((a) => a.status === "published") : role === "seller" ? all.filter((a) => a.ownerId === session?.userId) : all;
+    return pool
       .filter((a) => [a.name, a.location, a.category, categoryLabel(a.category)].some((f) => f.toLowerCase().includes(q)))
       .slice(0, 5);
-  }, [query]);
+  }, [query, all, role, session?.userId]);
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -28,10 +40,10 @@ export function GlobalSearch() {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const go = (slug: string) => {
+  const go = (a: Asset) => {
     setOpen(false);
     setQuery("");
-    router.push(`/marketplace/${slug}`);
+    router.push(hrefFor(role, a));
   };
 
   return (
@@ -50,7 +62,7 @@ export function GlobalSearch() {
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
-            if (e.key === "Enter" && results[0]) go(results[0].slug);
+            if (e.key === "Enter" && results[0]) go(results[0]);
           }}
           className="h-10 w-full rounded-xl border border-line bg-white pl-10 pr-3 text-sm placeholder:text-ink-muted/80 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20"
         />
@@ -66,7 +78,7 @@ export function GlobalSearch() {
                 type="button"
                 role="option"
                 aria-selected="false"
-                onClick={() => go(a.slug)}
+                onClick={() => go(a)}
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-green-50"
               >
                 <span className="min-w-0">

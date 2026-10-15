@@ -9,10 +9,10 @@ const cover = (name: string) => `/images/assets/${name}.svg`;
 export const IMAGES = {
   coffee: cover("coffee"),
   rice: cover("rice"),
-  durian: cover("durian"),
-  mangrove: cover("carbon"),
+  palmoil: cover("palmoil"),
+  soybean: cover("soybean"),
+  cocoa: cover("cocoa"),
   pepper: cover("pepper"),
-  solar: cover("solar"),
   highlands: cover("coffee"),
 };
 

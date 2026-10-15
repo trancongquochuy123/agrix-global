@@ -13,14 +13,16 @@ const riskTone = { Low: "text-green-600", Medium: "text-warning", High: "text-da
 
 export function AssetCard({
   asset,
+  basePath = "/marketplace",
   wishlisted,
   onToggleWishlist,
 }: {
   asset: Asset;
+  basePath?: string;
   wishlisted: boolean;
   onToggleWishlist: (asset: Asset) => void;
 }) {
-  const href = `/marketplace/${asset.slug}`;
+  const href = `${basePath}/${asset.slug}`;
   return (
     <article className="card group relative overflow-hidden transition-shadow duration-200 hover:shadow-pop">
       <div className="relative h-40 sm:h-44">
@@ -32,7 +34,7 @@ export function AssetCard({
           imgClassName="transition-transform duration-300 group-hover:scale-[1.03]"
         />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/35 to-transparent" />
-        {asset.verified && <VerifiedBadge variant="overlay" className="absolute left-3 top-3" />}
+        <VerifiedBadge label="AGRIX Reviewed" variant="overlay" className="absolute left-3 top-3" />
         <button
           type="button"
           onClick={() => onToggleWishlist(asset)}
@@ -66,7 +68,7 @@ export function AssetCard({
             <Sprout className="h-5 w-5 text-green-600" aria-hidden="true" />
             <div className="leading-tight">
               <p className="figure text-base font-bold">{asset.targetYield}%</p>
-              <p className="text-xs text-ink-muted">Target Yield</p>
+              <p className="text-xs text-ink-muted">Illustrative return</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5 border-l border-line pl-3">

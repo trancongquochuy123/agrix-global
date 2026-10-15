@@ -1,23 +1,35 @@
 import { polygonAreaHa, scaleToArea, type LatLng } from "@/lib/geo";
+import type { AssetCategory } from "@/types/asset";
 
-export const STEPS = ["Asset Type", "Ownership", "Location", "Operations", "Review"] as const;
+export const STEPS = ["Asset Type", "Ownership", "Location", "Operations", "Financing", "Review"] as const;
+export const LAST_STEP = STEPS.length - 1;
 
-export const categoryOptions = ["Perennial crops", "Annual crops", "Carbon & forestry", "Agri-energy"] as const;
+export const categoryOptions = ["Perennial crops", "Annual crops"] as const;
 
 export const cropOptions: Record<string, string[]> = {
-  "Perennial crops": ["Coffee", "Durian", "Black pepper", "Cashew", "Rubber"],
-  "Annual crops": ["Rice", "Maize", "Cassava", "Vegetables"],
-  "Carbon & forestry": ["Mangrove restoration", "Reforestation", "Agroforestry"],
-  "Agri-energy": ["Agrivoltaics", "Biogas"],
+  "Perennial crops": ["Coffee", "Palm oil", "Cocoa", "Black pepper"],
+  "Annual crops": ["Rice", "Soybeans"],
 };
 
-export const currencies = ["USD", "VND", "KRW", "EUR"] as const;
+/** Crop picked in the form → marketplace category id. */
+export const cropToCategory: Record<string, AssetCategory> = {
+  Coffee: "coffee",
+  "Palm oil": "palmoil",
+  Cocoa: "cocoa",
+  "Black pepper": "pepper",
+  Rice: "rice",
+  Soybeans: "soybean",
+};
+
+export const currencies = ["USD"] as const;
 export const ownershipTypes = ["Individual", "Company", "Cooperative", "Long-term land lease"] as const;
 export const landUseTypes = ["Perennial crops", "Annual crops", "Forestry", "Aquaculture", "Mixed use"] as const;
 export const irrigationMethods = ["Drip irrigation", "Sprinkler", "Flood / paddy", "Rain-fed"] as const;
 export const certificationOptions = ["VietGAP", "GlobalG.A.P.", "Rainforest Alliance", "Organic", "4C"] as const;
 export const harvestSeasons = ["Jan – Mar", "Apr – Jun", "Jul – Sep", "Oct – Dec", "Year-round"] as const;
-export const provinces = ["Dak Lak", "Dak Nong", "Lam Dong", "Gia Lai", "An Giang", "Ca Mau", "Ninh Thuan", "Can Tho", "Ben Tre"] as const;
+export const provinces = ["Dak Lak", "Dak Nong", "Lam Dong", "Gia Lai", "An Giang", "Ca Mau", "Ninh Thuan", "Can Tho", "Ben Tre", "Riau", "Mato Grosso", "Ashanti"] as const;
+
+export const countryOfProvince: Record<string, string> = { Riau: "Indonesia", "Mato Grosso": "Brazil", Ashanti: "Ghana" };
 
 export const knownPlaces: { match: string; province: string; address: string; coords: LatLng }[] = [
   { match: "dak lak", province: "Dak Lak", address: "Ea Kar District, Dak Lak Province, Vietnam", coords: [12.7704, 108.2417] },
@@ -27,6 +39,9 @@ export const knownPlaces: { match: string; province: string; address: string; co
   { match: "gia lai", province: "Gia Lai", address: "Chu Se District, Gia Lai Province, Vietnam", coords: [13.98, 108.0] },
   { match: "an giang", province: "An Giang", address: "Thoai Son District, An Giang Province, Vietnam", coords: [10.52, 105.13] },
   { match: "ca mau", province: "Ca Mau", address: "Nam Can District, Ca Mau Province, Vietnam", coords: [9.17, 105.15] },
+  { match: "riau", province: "Riau", address: "Pekanbaru Region, Riau Province, Indonesia", coords: [0.51, 101.45] },
+  { match: "mato grosso", province: "Mato Grosso", address: "Sorriso Municipality, Mato Grosso, Brazil", coords: [-12.55, -55.72] },
+  { match: "ashanti", province: "Ashanti", address: "Kumasi Metropolitan Area, Ashanti Region, Ghana", coords: [6.7, -1.62] },
   { match: "ninh thuan", province: "Ninh Thuan", address: "Thuan Nam District, Ninh Thuan Province, Vietnam", coords: [11.56, 108.99] },
 ];
 
@@ -68,6 +83,11 @@ export interface RegisterData {
   harvestSeason: string;
   operatingCosts: string;
   expectedRevenue: string;
+  // Step 5
+  financingTarget: string;
+  termMonths: string;
+  expectedReturn: string;
+  description: string;
 }
 
 const BASE_CENTER: LatLng = [12.7704, 108.2417];
@@ -111,6 +131,10 @@ export const initialData: RegisterData = {
   harvestSeason: "",
   operatingCosts: "",
   expectedRevenue: "",
+  financingTarget: "",
+  termMonths: "6",
+  expectedReturn: "",
+  description: "",
 };
 
 export const drawnAreaHa = (d: RegisterData) => polygonAreaHa(d.vertices);
@@ -139,8 +163,8 @@ export function validateStep(step: number, d: RegisterData): Errors {
     if (!d.province) e.province = "Select a province or city.";
     const lat = Number(d.latitude);
     const lng = Number(d.longitude);
-    if (!Number.isFinite(lat) || lat < 8 || lat > 24) e.latitude = "Latitude must be within Vietnam (8–24).";
-    if (!Number.isFinite(lng) || lng < 102 || lng > 110.5) e.longitude = "Longitude must be within Vietnam (102–110.5).";
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) e.latitude = "Latitude must be between -90 and 90.";
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) e.longitude = "Longitude must be between -180 and 180.";
   }
   if (step === 3) {
     if (!d.operationsCrop) e.operationsCrop = "Select the primary crop.";
@@ -150,6 +174,15 @@ export function validateStep(step: number, d: RegisterData): Errors {
     if (!d.harvestSeason) e.harvestSeason = "Select a harvest season.";
     if (!positive(d.operatingCosts)) e.operatingCosts = "Enter annual operating costs.";
     if (!positive(d.expectedRevenue)) e.expectedRevenue = "Enter expected annual revenue.";
+  }
+  if (step === 4) {
+    if (!positive(d.financingTarget)) e.financingTarget = "Enter the amount you want to raise.";
+    else if (positive(d.estimatedValue) && Number(d.financingTarget) > Number(d.estimatedValue)) e.financingTarget = "The target cannot exceed the asset value.";
+    const term = Number(d.termMonths);
+    if (!Number.isInteger(term) || term < 1 || term > 36) e.termMonths = "Enter a term between 1 and 36 months.";
+    const ret = Number(d.expectedReturn);
+    if (!positive(d.expectedReturn) || ret > 30) e.expectedReturn = "Enter an illustrative return between 0.1% and 30%.";
+    if (d.description.trim().length < 20) e.description = "Describe the financing purpose (at least 20 characters).";
   }
   return e;
 }

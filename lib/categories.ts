@@ -12,10 +12,10 @@ export interface CategoryMeta {
 export const CATEGORIES: CategoryMeta[] = [
   { id: "coffee", label: "Coffee", longLabel: "Coffee Estate", color: "#8A5A3C" },
   { id: "rice", label: "Rice", longLabel: "Rice Project", color: "#C4A35A" },
-  { id: "durian", label: "Durian", longLabel: "Durian Orchard", color: "#7FAE3C" },
-  { id: "carbon", label: "Carbon", longLabel: "Carbon Project", color: "#2E8B63" },
+  { id: "palmoil", label: "Palm Oil", longLabel: "Palm Oil Plantation", color: "#C2581C" },
+  { id: "soybean", label: "Soybeans", longLabel: "Soybean Farm", color: "#7FAE3C" },
+  { id: "cocoa", label: "Cocoa", longLabel: "Cocoa Farm", color: "#6B3F2A" },
   { id: "pepper", label: "Pepper", longLabel: "Pepper Farm", color: "#4B5D3A" },
-  { id: "solar", label: "Solar", longLabel: "Agri-Solar", color: "#D9A441" },
 ];
 
 export const ALL = "all" as const;

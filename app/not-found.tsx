@@ -9,7 +9,7 @@ export default function NotFound() {
       description="The page or asset you're looking for doesn't exist or has been moved."
       action={
         <Button asChild>
-          <Link href="/dashboard">Back to overview</Link>
+          <Link href="/marketplace">Back to marketplace</Link>
         </Button>
       }
     />

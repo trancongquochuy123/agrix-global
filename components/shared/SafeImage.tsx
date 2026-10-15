@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Coffee, Sprout, Sun, TreeDeciduous, Trees, Wheat, type LucideIcon } from "lucide-react";
+import { Bean, Coffee, Palmtree, Sprout, Trees, Wheat, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const placeholderIcons: Record<string, LucideIcon> = {
   coffee: Coffee,
   rice: Wheat,
-  durian: TreeDeciduous,
-  carbon: Trees,
+  palmoil: Palmtree,
+  soybean: Bean,
+  cocoa: Trees,
   pepper: Sprout,
-  solar: Sun,
 };
 
 interface SafeImageProps {

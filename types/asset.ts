@@ -1,6 +1,14 @@
-export type AssetCategory = "coffee" | "rice" | "durian" | "carbon" | "pepper" | "solar";
+export type AssetCategory = "coffee" | "rice" | "palmoil" | "soybean" | "cocoa" | "pepper";
 export type RiskLevel = "Low" | "Medium" | "High";
 export type VerificationStatus = "Verified" | "In Review" | "Pending";
+
+/** Lifecycle of a listing in the demo: seller submits → admin decides → published listings are investable. */
+export type AssetStatus = "pending_review" | "changes_requested" | "rejected" | "published";
+
+export interface UploadedDocMeta {
+  name: string;
+  sizeKb: number;
+}
 
 export interface Asset {
   id: string;
@@ -9,16 +17,31 @@ export interface Asset {
   category: AssetCategory;
   location: string;
   province: string;
+  country: string;
   areaHa: number;
+  /** Illustrative annualised return (%), never a guarantee. */
   targetYield: number;
   risk: RiskLevel;
   fundedPct: number;
   raisedUsd: number;
   targetUsd: number;
+  assetValueUsd: number;
+  termMonths: number;
+  minInvestmentUsd: number;
+  investors: number;
   image: string;
   imageFallback: string;
   coords: [number, number];
-  verified: boolean;
+  description: string;
+  ownerId: string;
+  ownerName: string;
+  status: AssetStatus;
+  createdAt: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+  /** Names of files the seller attached (simulated upload). */
+  uploads: UploadedDocMeta[];
 }
 
 export interface AssetDocument {

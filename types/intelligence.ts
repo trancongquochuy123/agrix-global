@@ -40,7 +40,7 @@ export interface MapLocation {
   id: string;
   name: string;
   region: "Central Highlands" | "Mekong Delta" | "Central Coast" | "Northern Vietnam";
-  category: "coffee" | "rice" | "durian" | "carbon";
+  category: "coffee" | "rice" | "pepper" | "cocoa";
   position: [number, number];
   valueUsd: number;
   areaHa: number;

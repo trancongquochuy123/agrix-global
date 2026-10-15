@@ -1,32 +1,23 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
-import { Sidebar } from "@/components/navigation/Sidebar";
-import { MobileNavigation } from "@/components/navigation/MobileNavigation";
-import { Header } from "./Header";
+import { DemoSwitcher } from "@/components/demo/DemoSwitcher";
+import { DEMO_MODE } from "@/lib/demo/config";
+import { portalOf } from "@/lib/demo/routes";
+import { PortalShell } from "./PortalShell";
+import { PublicShell } from "./PublicShell";
 
+/** Routes under /investor, /seller and /admin get the role workspace; everything else is the public site. */
 export function AppShell({ children }: { children: ReactNode }) {
-  const [expanded, setExpanded] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
+  const pathname = usePathname();
+  const portal = portalOf(pathname);
   return (
-    <div className="min-h-screen">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-pop"
-      >
-        Skip to content
-      </a>
-      <Sidebar expanded={expanded} onToggle={() => setExpanded((v) => !v)} />
-      <MobileNavigation open={mobileOpen} onOpenChange={setMobileOpen} />
-      <div className="md:pl-[72px] xl:pl-60">
-        <Header onOpenMobileNav={() => setMobileOpen(true)} />
-        <main id="main" className="mx-auto max-w-[1400px] px-4 pb-24 pt-5 sm:px-6 sm:pt-6 md:pb-10 xl:px-8">
-          {children}
-        </main>
-      </div>
+    <>
+      {portal ? <PortalShell role={portal}>{children}</PortalShell> : <PublicShell>{children}</PublicShell>}
       <Toaster position="top-right" closeButton toastOptions={{ classNames: { toast: "font-sans" } }} />
-    </div>
+      {DEMO_MODE && <DemoSwitcher />}
+    </>
   );
 }

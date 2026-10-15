@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { DashboardView } from "@/components/dashboard/DashboardView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Overview" };
-
-export default function DashboardPage() {
-  return <DashboardView />;
+/** Legacy route kept so old links keep working. */
+export default function Page() {
+  redirect("/investor/dashboard");
 }

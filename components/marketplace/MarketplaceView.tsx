@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { MapPanel } from "@/components/maps/MapFrame";
 import { ListingsMap } from "@/components/maps";
-import { assets, locationOptions, riskOptions, yieldOptions } from "@/data/assets";
+import { locationOptionsFor, riskOptions, yieldOptions } from "@/data/assets";
+import { useDemo } from "@/lib/demo/hooks";
+import { demoStore } from "@/lib/demo/store";
+import { publishedAssets } from "@/lib/demo/selectors";
 import { ALL, categoryChips, categoryLabel, isCategory, type CategoryFilter } from "@/lib/categories";
 import type { Asset } from "@/types/asset";
 import { cn } from "@/lib/utils";
@@ -20,7 +23,7 @@ const PAGE_SIZE = 6;
 const WISHLIST_KEY = "agrix:wishlist:v1";
 
 /** Reads filter state from the URL, ignoring anything that is not a known option. */
-function readParams(search: string) {
+function readParams(search: string, locationOptions: string[]) {
   const p = new URLSearchParams(search);
   const cat = p.get("category");
   const loc = p.get("location");
@@ -36,7 +39,10 @@ function readParams(search: string) {
   };
 }
 
-export function MarketplaceView() {
+export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discover agricultural opportunities." }: { basePath?: string; subtitle?: string }) {
+  const demo = useDemo();
+  const assets = useMemo(() => publishedAssets(demo), [demo]);
+  const locationOptions = useMemo(() => locationOptionsFor(assets), [assets]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>(ALL);
   const [location, setLocation] = useState("All locations");
@@ -52,7 +58,7 @@ export function MarketplaceView() {
 
   // Hydrate filters from the URL and the wishlist from localStorage after mount (SSR-safe).
   useEffect(() => {
-    const init = readParams(window.location.search);
+    const init = readParams(window.location.search, locationOptionsFor(publishedAssets(demoStore.getSnapshot())));
     setQuery(init.query);
     setCategory(init.category);
     setLocation(init.location);
@@ -101,7 +107,7 @@ export function MarketplaceView() {
       if (minYield !== "any" && a.targetYield < Number(minYield)) return false;
       return true;
     });
-  }, [query, category, location, risk, minYield]);
+  }, [assets, query, category, location, risk, minYield]);
 
   // Brief skeleton on filter changes to mimic a data fetch.
   useEffect(() => {
@@ -206,7 +212,7 @@ export function MarketplaceView() {
 
   return (
     <div>
-      <PageHeader title="Asset Marketplace" subtitle="Discover verified agricultural opportunities." />
+      <PageHeader title="Asset Marketplace" subtitle={subtitle} />
 
       {/* Search + filters */}
       <div className="space-y-3">
@@ -277,12 +283,12 @@ export function MarketplaceView() {
           />
         ) : view === "map" ? (
           <MapPanel className="h-[480px] sm:h-[600px]">
-            <ListingsMap assets={filtered} />
+            <ListingsMap assets={filtered} basePath={basePath} />
           </MapPanel>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {pageItems.map((a) => (
-              <AssetCard key={a.id} asset={a} wishlisted={wishlist.has(a.id)} onToggleWishlist={toggleWishlist} />
+              <AssetCard key={a.id} asset={a} basePath={basePath} wishlisted={wishlist.has(a.id)} onToggleWishlist={toggleWishlist} />
             ))}
           </div>
         )}

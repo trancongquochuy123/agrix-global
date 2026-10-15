@@ -14,6 +14,7 @@ import { StackedBarChart } from "@/components/charts/StackedBarChart";
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { CHART } from "@/components/charts/ChartPrimitives";
 import { valuationModule } from "@/data/analytics";
+import { DemoAnalysisChip } from "@/components/ai/AiInsights";
 import { formatNumber, formatUsd } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { productionLabels } from "./labels";
@@ -86,7 +87,7 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
         <ChartCard
           title="Ownership Verification"
           icon={<FileCheck2 className="h-5 w-5" />}
-          action={<span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Verified</span>}
+          action={<span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Simulated review</span>}
         >
           <ol className="space-y-3">
             {detail.verification.map((v, i) => (
@@ -161,7 +162,7 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <ChartCard title="AI Valuation Range" subtitle="91% model confidence · refreshed Oct 2, 2026">
+      <ChartCard title="AI Valuation Range" subtitle="Simulated model output from predefined data" action={<DemoAnalysisChip />}>
         <p className="figure text-4xl font-extrabold">{formatUsd(base, { decimals: 2 })}</p>
         <p className="mt-1 text-sm text-ink-muted">Base-case fair value</p>
         <div className="mt-6">
@@ -185,7 +186,7 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
       </ChartCard>
 
       <div className="flex flex-col gap-5">
-        <ChartCard title="Valuation trend" subtitle="Fair value, $ millions — last 7 months" bodyClassName="h-52">
+        <ChartCard title="Valuation trend" subtitle="Fair value, $ millions · last 7 months" action={<DemoAnalysisChip />} bodyClassName="h-52">
           <TrendChart
             ariaLabel="Seven-month valuation trend"
             data={series}
@@ -208,7 +209,7 @@ export function RiskTab({ detail }: { detail: AssetDetail }) {
   const level = detail.riskScore < 33 ? "Low" : detail.riskScore < 60 ? "Medium" : "High";
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-      <ChartCard title="Composite Risk Score" subtitle="Lower is better">
+      <ChartCard title="Composite Risk Score" subtitle="Lower is better" action={<DemoAnalysisChip />}>
         <div className="flex flex-col items-center py-4">
           <p className="figure text-6xl font-extrabold">
             {detail.riskScore}
@@ -216,7 +217,7 @@ export function RiskTab({ detail }: { detail: AssetDetail }) {
           </p>
           <RiskBadge level={level} className="mt-3" />
           <p className="mt-4 text-center text-sm text-ink-muted">
-            Weighted across climate, market, operations, legal and biological factors, re-scored daily by the AGRIX Risk Engine.
+            Weighted across climate, market, operations, legal and biological factors. Simulated from predefined demo data.
           </p>
         </div>
       </ChartCard>

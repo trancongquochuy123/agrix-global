@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { RegisterWizard } from "@/components/assets/RegisterWizard";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Register an Asset" };
-
-export default function RegisterAssetPage() {
-  return <RegisterWizard />;
+/** Legacy route kept so old links keep working. */
+export default function Page() {
+  redirect("/seller/assets/new");
 }

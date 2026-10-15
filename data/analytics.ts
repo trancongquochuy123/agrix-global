@@ -30,20 +30,6 @@ export const assetValueGrowth = [
   { label: "Q4 2024", value: 128.4 },
 ];
 
-export const dashboardAllocation = [
-  { name: "Coffee", pct: 42, valueUsd: 53.9e6, color: "#5B3A29" },
-  { name: "Rice", pct: 28, valueUsd: 36.0e6, color: "#D9B550" },
-  { name: "Durian", pct: 18, valueUsd: 23.1e6, color: "#2F7D3B" },
-  { name: "Carbon", pct: 12, valueUsd: 15.4e6, color: "#8FC16B" },
-];
-
-export const recentAssets = [
-  { id: "ra1", slug: "dak-lak-coffee-estate", name: "Highland Coffee Estate", location: "Lam Dong, Central Highlands", type: "coffee", valueUsd: 12.5e6, status: "Verified" as const },
-  { id: "ra2", slug: "mekong-rice-cluster", name: "Mekong Rice Cluster", location: "An Giang, Mekong Delta", type: "rice", valueUsd: 8.7e6, status: "Verified" as const },
-  { id: "ra3", slug: "lam-dong-durian-orchard", name: "Durian Orchard", location: "Dak Lak, Central Highlands", type: "durian", valueUsd: 10.2e6, status: "Verified" as const },
-  { id: "ra4", slug: "mangrove-carbon-project", name: "Mangrove Carbon Project", location: "Ca Mau, Mekong Delta", type: "carbon", valueUsd: 15.4e6, status: "In Review" as const },
-];
-
 export const dashboardRisk: RiskIndicator[] = [
   { id: "climate", label: "Climate Risk", level: "Low", score: 24 },
   { id: "market", label: "Market Risk", level: "Low", score: 38 },
@@ -60,9 +46,9 @@ export const intelligenceModules: IntelligenceModule[] = [
 ];
 
 export const twinAssets = [
-  { slug: "dak-lak-coffee-estate", name: "Dak Lak Coffee Estate", place: "Buon Ma Thuot, Vietnam", detail: "320 hectares · Arabica & Robusta" },
-  { slug: "lam-dong-durian-orchard", name: "Lam Dong Durian Orchard", place: "Lam Dong, Vietnam", detail: "480 hectares · Monthong" },
-  { slug: "gia-lai-pepper-farm", name: "Gia Lai Pepper Farm", place: "Gia Lai, Vietnam", detail: "220 hectares · Black pepper" },
+  { slug: "vietnam-robusta-coffee", name: "Vietnam Robusta Coffee", place: "Dak Lak, Vietnam", detail: "40 hectares · Robusta" },
+  { slug: "vietnamese-rice", name: "Vietnamese Rice", place: "An Giang, Vietnam", detail: "Mekong Delta · Fragrant rice" },
+  { slug: "vietnamese-black-pepper", name: "Vietnamese Black Pepper", place: "Gia Lai, Vietnam", detail: "Central Highlands · Black pepper" },
 ];
 
 export const twinTimeline = ["Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026", "Nov 2026"];

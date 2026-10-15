@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { IntelligenceView } from "@/components/intelligence/IntelligenceView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "AI Intelligence" };
-
-export default function AiIntelligencePage() {
-  return <IntelligenceView />;
+/** Legacy route kept so old links keep working. */
+export default function Page() {
+  redirect("/investor/ai-intelligence");
 }

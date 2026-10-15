@@ -76,3 +76,26 @@ export function VerifiedBadge({
     </span>
   );
 }
+
+const listingStyles: Record<string, string> = {
+  published: "bg-green-50 text-green-700 ring-green-100",
+  pending_review: "bg-[#FBEFD9] text-[#8A5A0B] ring-[#F1DCB4]",
+  changes_requested: "bg-[#FDF1E3] text-[#9A5B12] ring-[#F1D6B0]",
+  rejected: "bg-[#FBE5E3] text-[#9B2C25] ring-[#F3C9C5]",
+};
+
+const listingLabel: Record<string, string> = {
+  published: "Published",
+  pending_review: "Pending Review",
+  changes_requested: "Changes Requested",
+  rejected: "Rejected",
+};
+
+/** Lifecycle status of a seller listing. */
+export function ListingStatusBadge({ status, className }: { status: string; className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset", listingStyles[status] ?? listingStyles.pending_review, className)}>
+      {listingLabel[status] ?? status}
+    </span>
+  );
+}

@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { DocumentsView } from "@/components/documents/DocumentsView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Documents" };
-
-export default function DocumentsPage() {
-  return <DocumentsView />;
+/** Legacy route kept so old links keep working. */
+export default function Page() {
+  redirect("/investor/documents");
 }

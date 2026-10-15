@@ -17,3 +17,4 @@ next-env.d.ts
 Thumbs.db
 # update bundles
 *.tgz
+_to_delete/

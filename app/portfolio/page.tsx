@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { PortfolioView } from "@/components/portfolio/PortfolioView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Portfolio" };
-
-export default function PortfolioPage() {
-  return <PortfolioView />;
+/** Legacy route kept so old links keep working. */
+export default function Page() {
+  redirect("/investor/portfolio");
 }

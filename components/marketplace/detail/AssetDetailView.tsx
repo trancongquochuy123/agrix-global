@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { CalendarClock, ChevronRight, HelpCircle, Lock, MapPin, ShieldCheck, Database, BarChart3, ArrowRight, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarClock, ChevronRight, Info, MapPin, ShieldCheck, Database, BarChart3, ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPanel } from "@/components/maps/MapFrame";
@@ -12,32 +12,110 @@ import { SafeImage } from "@/components/shared/SafeImage";
 import { VerifiedBadge } from "@/components/shared/badges";
 import { ProgressBar } from "@/components/shared/ProgressBar";
 import { FadeIn } from "@/components/shared/FadeIn";
-import { assetBySlug, getAssetDetail } from "@/data/assets";
+import { getAssetDetail } from "@/data/assets";
+import { AiInsightsTab } from "@/components/ai/AiInsights";
+import { InvestDialog } from "@/components/investor/InvestDialog";
+import { useReserveBottom } from "@/components/demo/useReserveBottom";
+import { EmptyState } from "@/components/shared/states";
+import { Skeleton } from "@/components/shared/SkeletonLoader";
+import { useDemo, useHydrated } from "@/lib/demo/hooks";
+import { remainingUsd } from "@/lib/demo/store";
+import { STATUS_LABEL } from "@/lib/demo/selectors";
 import { formatUsd } from "@/lib/formatters";
 import { ActivityTab, DocumentsTab, OverviewTab, RiskTab, ValuationTab } from "./DetailTabs";
-import { RequestAccessDialog } from "./RequestAccessDialog";
 import { plantationLabel } from "./labels";
 
 function formatTerm(months: number) {
   return months >= 60 && months % 12 === 0 ? `${months / 12} years` : `${months} months`;
 }
 
-export function AssetDetailView({ slug }: { slug: string }) {
-  const asset = assetBySlug(slug);
-  const detail = getAssetDetail(slug);
+export function AssetDetailView({ slug, basePath = "/marketplace" }: { slug: string; basePath?: string }) {
+  const router = useRouter();
+  const hydrated = useHydrated();
+  const { assets, session } = useDemo();
+  const asset = assets.find((a) => a.slug === slug);
+  const detail = useMemo(() => (asset ? getAssetDetail(asset) : undefined), [asset]);
   const [tab, setTab] = useState("overview");
   const [dialogOpen, setDialogOpen] = useState(false);
-  if (!asset || !detail) notFound();
+  useReserveBottom(76, true);
+
+  if (!hydrated) {
+    return (
+      <div role="status" aria-label="Loading asset" className="space-y-5">
+        <Skeleton className="h-6 w-64" />
+        <Skeleton className="h-20 w-full max-w-3xl" />
+        <Skeleton className="h-[360px] w-full rounded-card" />
+      </div>
+    );
+  }
+
+  const isOwner = !!asset && session?.userId === asset.ownerId;
+  const canView = !!asset && (asset.status === "published" || isOwner || session?.role === "admin");
+  if (!asset || !detail || !canView) {
+    return (
+      <EmptyState
+        title={asset ? "This asset is not open for investment" : "Asset not found"}
+        description={asset ? "It is awaiting review or has not been published yet." : "The asset you are looking for does not exist in this demo dataset."}
+        action={
+          <Button asChild>
+            <Link href={basePath}>Back to marketplace</Link>
+          </Button>
+        }
+      />
+    );
+  }
 
   const pct = Math.round((detail.raisedUsd / detail.raiseTargetUsd) * 100);
   const riskTone = detail.riskScore < 33 ? "text-green-600" : detail.riskScore < 60 ? "text-warning" : "text-danger";
 
   const headlineStats = [
     { icon: <Database className="h-6 w-6" />, label: "Asset Value", value: formatUsd(detail.assetValueUsd) },
-    { icon: <BarChart3 className="h-6 w-6" />, label: "Target Yield", value: `${asset.targetYield}%` },
+    { icon: <BarChart3 className="h-6 w-6" />, label: "Illustrative return", value: `${asset.targetYield}%` },
     { icon: <CalendarClock className="h-6 w-6" />, label: "Term", value: formatTerm(detail.termMonths) },
     { icon: <ShieldCheck className="h-6 w-6" />, label: "Risk Score", value: `${detail.riskScore}`, suffix: " / 100", tone: riskTone },
   ];
+
+  const remaining = remainingUsd(asset);
+  const published = asset.status === "published";
+  const fullyFunded = remaining <= 0;
+  const investorAllowed = session?.role === "investor";
+
+  const onInvest = () => {
+    if (!session) {
+      router.push(`/auth/login?next=${encodeURIComponent(`/investor/marketplace/${asset.slug}`)}`);
+      return;
+    }
+    setDialogOpen(true);
+  };
+
+  const cta = (where: "desktop" | "mobile") => {
+    const size = "lg" as const;
+    if (!published) {
+      return (
+        <div className="rounded-xl bg-[#FBEFD9] p-3 text-sm text-[#8A5A0B]">
+          <p className="font-semibold">{STATUS_LABEL[asset.status]}</p>
+          <p className="mt-0.5 text-xs">Not visible to investors until an admin approves this listing.</p>
+        </div>
+      );
+    }
+    if (fullyFunded) return <Button size={size} className="w-full" disabled>Fully funded</Button>;
+    if (session && !investorAllowed) {
+      return (
+        <p className="flex gap-2 rounded-xl bg-green-50 p-3 text-xs text-ink-muted">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Signed in as {session.role}. Switch to an investor account to invest.
+        </p>
+      );
+    }
+    return (
+      <>
+        <Button size={size} className="w-full" onClick={onInvest}>
+          Invest Now <ArrowRight className="h-4 w-4" />
+        </Button>
+        {where === "desktop" && !session && <p className="mt-3 text-center text-xs text-ink-muted">You will be asked to log in with a demo account.</p>}
+      </>
+    );
+  };
 
   const investPanel = (
     <div className="card flex h-full flex-col p-5">
@@ -50,23 +128,14 @@ export function AssetDetailView({ slug }: { slug: string }) {
       </div>
       <div className="mt-3 flex justify-between text-sm text-ink-muted">
         <span>{detail.investors} investors</span>
-        <span>{detail.daysRemaining} days remaining</span>
+        <span>{formatUsd(remaining)} remaining</span>
       </div>
       <hr className="my-5 border-line" />
       <p className="text-sm text-ink-muted">Minimum investment</p>
       <p className="figure mt-1 text-3xl font-extrabold">{formatUsd(detail.minInvestmentUsd, { compact: false })}</p>
-      <Button size="lg" className="mt-5 hidden w-full md:inline-flex" onClick={() => setDialogOpen(true)}>
-        Request Access <ArrowRight className="h-4 w-4" />
-      </Button>
-      <p className="mt-4 flex items-center justify-center gap-2 text-xs text-ink-muted">
-        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-        Complete due diligence to access investment
-        <span title="You'll review the data room and verify your investor profile before committing capital." className="cursor-help">
-          <HelpCircle className="h-4 w-4" aria-label="More information" />
-        </span>
-      </p>
+      <div className="hidden md:block">{cta("desktop")}</div>
       <p className="mt-auto pt-5 text-[11px] leading-snug text-ink-muted/80">
-        Prototype data only. Figures are illustrative and not an offer to invest.
+        Simulated listing. Returns are illustrative, not guaranteed, and this is not an offer to invest.
       </p>
     </div>
   );
@@ -74,9 +143,9 @@ export function AssetDetailView({ slug }: { slug: string }) {
   return (
     <div>
       <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-ink-muted">
-        <Link href="/marketplace" className="hover:text-ink hover:underline">Marketplace</Link>
+        <Link href={basePath} className="hover:text-ink hover:underline">Marketplace</Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-        <Link href={`/marketplace?category=${asset.category}`} className="hover:text-ink hover:underline">{detail.breadcrumbCategory}</Link>
+        <Link href={`${basePath}?category=${asset.category}`} className="hover:text-ink hover:underline">{detail.breadcrumbCategory}</Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         <span aria-current="page" className="font-medium text-ink">{asset.name}</span>
       </nav>
@@ -88,7 +157,7 @@ export function AssetDetailView({ slug }: { slug: string }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-[26px] font-extrabold leading-tight sm:text-4xl">{asset.name}</h1>
-                <VerifiedBadge />
+                {published ? <VerifiedBadge label="AGRIX Reviewed" /> : <span className="rounded-full bg-[#FBEFD9] px-3 py-1.5 text-xs font-semibold text-[#8A5A0B]">{STATUS_LABEL[asset.status]}</span>}
               </div>
               <p className="mt-1 text-sm font-medium text-green-700">{detail.profile}</p>
               <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-muted">
@@ -128,6 +197,7 @@ export function AssetDetailView({ slug }: { slug: string }) {
       <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList aria-label="Asset detail sections">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="ai">AI Insights</TabsTrigger>
           <TabsTrigger value="valuation">AI Valuation</TabsTrigger>
           <TabsTrigger value="risk">Risk</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -135,6 +205,9 @@ export function AssetDetailView({ slug }: { slug: string }) {
         </TabsList>
         <TabsContent value="overview">
           <OverviewTab detail={detail} asset={asset} onViewAllDocs={() => setTab("documents")} />
+        </TabsContent>
+        <TabsContent value="ai">
+          <AiInsightsTab asset={asset} detail={detail} />
         </TabsContent>
         <TabsContent value="valuation">
           <ValuationTab detail={detail} />
@@ -157,13 +230,11 @@ export function AssetDetailView({ slug }: { slug: string }) {
             <p className="figure text-base font-extrabold">{pct}% funded</p>
             <p className="text-xs text-ink-muted">Min. {formatUsd(detail.minInvestmentUsd, { compact: false })}</p>
           </div>
-          <Button size="lg" className="ml-auto flex-1" onClick={() => setDialogOpen(true)}>
-            Request Access
-          </Button>
+          <div className="ml-auto flex-1">{cta("mobile")}</div>
         </div>
       </div>
 
-      <RequestAccessDialog open={dialogOpen} onOpenChange={setDialogOpen} assetName={asset.name} />
+      <InvestDialog asset={asset} open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }

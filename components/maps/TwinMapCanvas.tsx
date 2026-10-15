@@ -2,7 +2,7 @@
 
 import { MapContainer, Marker, Polygon, Popup, ScaleControl, TileLayer } from "react-leaflet";
 import { sensors } from "@/data/analytics";
-import { getAssetDetail } from "@/data/assets";
+import { getAssetDetail, knownAssetBySlug, COFFEE_SLUG } from "@/data/assets";
 import type { SensorPoint } from "@/types/intelligence";
 import { boundsOf, centroid } from "@/lib/geo";
 import { FitOnResize, dotIcon, MapControls, MapLegend, SATELLITE_ATTRIBUTION, SATELLITE_URL } from "./MapChrome";
@@ -26,10 +26,12 @@ function span(points: [number, number][]) {
   return Math.max(c - a, d - b) || 1;
 }
 
-export default function TwinMapCanvas({ slug = "dak-lak-coffee-estate" }: { slug?: string }) {
-  const detail = getAssetDetail(slug);
-  const reference = getAssetDetail("dak-lak-coffee-estate");
-  if (!detail || !reference) return null;
+export default function TwinMapCanvas({ slug = COFFEE_SLUG }: { slug?: string }) {
+  const a = knownAssetBySlug(slug);
+  const ref = knownAssetBySlug(COFFEE_SLUG);
+  if (!a || !ref) return null;
+  const detail = getAssetDetail(a);
+  const reference = getAssetDetail(ref);
   const bounds = boundsOf(detail.boundary);
   const k = span(detail.boundary) / span(reference.boundary);
   const [refLat, refLng] = centroid(reference.boundary);

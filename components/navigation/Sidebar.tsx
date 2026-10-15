@@ -4,11 +4,13 @@ import Link from "next/link";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Logo, LogoMark } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
+import { homeOf } from "@/lib/demo/routes";
+import type { Role } from "@/lib/demo/types";
 import { NavList } from "./NavList";
 import { SidebarFooter } from "./SidebarFooter";
 
 /** Fixed on desktop (xl), icon rail on tablet that expands as an overlay, hidden on mobile. */
-export function Sidebar({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
+export function Sidebar({ role, expanded, onToggle }: { role: Role; expanded: boolean; onToggle: () => void }) {
   return (
     <>
       {expanded && (
@@ -26,7 +28,7 @@ export function Sidebar({ expanded, onToggle }: { expanded: boolean; onToggle: (
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between px-4">
-          <Link href="/dashboard" aria-label="AGRIX home" className="flex items-center">
+          <Link href={homeOf(role)} aria-label="AGRIX home" className="flex items-center">
             <span className={cn(expanded ? "hidden" : "block xl:hidden")}>
               <LogoMark />
             </span>
@@ -57,7 +59,7 @@ export function Sidebar({ expanded, onToggle }: { expanded: boolean; onToggle: (
           </button>
         )}
         <div className="px-3 pt-2">
-          <NavList labelClassName={expanded ? "inline" : "hidden xl:inline"} onNavigate={expanded ? onToggle : undefined} />
+          <NavList role={role} labelClassName={expanded ? "inline" : "hidden xl:inline"} onNavigate={expanded ? onToggle : undefined} />
         </div>
         <div className={cn("mt-auto", expanded ? "block" : "hidden xl:block")}>
           <SidebarFooter />
