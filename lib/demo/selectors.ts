@@ -87,15 +87,31 @@ export function performanceSeries(s: DemoState, investorId: string, atMs: number
   });
 }
 
+/** Sum of recorded ledger amounts for one asset. */
+export const ledgerTotalFor = (s: Pick<DemoState, "transactions">, assetId: string) =>
+  s.transactions.filter((t) => t.assetId === assetId).reduce((n, t) => n + t.amountUsd, 0);
+
+/** Number of individual investments in a set of ledger rows (an opening-balance row stands for several). */
+export const investmentCount = (txs: Transaction[]) => txs.reduce((n, t) => n + (t.investmentCount ?? 1), 0);
+
+/**
+ * Platform metrics. `volume` and `transactions` come from the transaction ledger; `fundedUsd` is the sum of the
+ * published assets' raised amounts. They must agree, and `variance` exposes any gap instead of hiding it.
+ */
 export function platformTotals(s: DemoState) {
-  const volume = s.assets.filter((a) => a.status === "published").reduce((n, a) => n + a.raisedUsd, 0);
+  const published = new Set(s.assets.filter((a) => a.status === "published").map((a) => a.id));
+  const ledger = s.transactions.filter((t) => published.has(t.assetId));
+  const volume = ledger.reduce((n, t) => n + t.amountUsd, 0);
+  const fundedUsd = s.assets.filter((a) => a.status === "published").reduce((n, a) => n + a.raisedUsd, 0);
   return {
+    fundedUsd,
+    variance: fundedUsd - volume,
     users: s.users.length,
     assets: s.assets.length,
     published: s.assets.filter((a) => a.status === "published").length,
     pending: pendingAssets(s).length,
     volume,
-    transactions: s.transactions.length,
+    transactions: investmentCount(ledger),
   };
 }
 

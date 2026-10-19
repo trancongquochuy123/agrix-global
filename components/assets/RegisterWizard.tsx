@@ -14,13 +14,16 @@ import { pctFunded } from "@/data/assets";
 import type { Asset } from "@/types/asset";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { countryOfProvince, cropToCategory, defaultBoundary, initialData, LAST_STEP, STEPS, validateStep, type RegisterData } from "./formModel";
+import { countryOfProvince, cropToCategory, defaultBoundary, initialData, LAST_STEP, numbers, STEPS, validateStep, type RegisterData } from "./formModel";
+import { parseCoordinate, parseNumeric, parseQuantity } from "@/lib/numeric";
 import { Step1AssetType } from "./steps/Step1AssetType";
 import { Step2Ownership } from "./steps/Step2Ownership";
 import { Step3Location } from "./steps/Step3Location";
 import { Step4Operations } from "./steps/Step4Operations";
 import { Step5Review } from "./steps/Step5Review";
 import { StepFinancing } from "./steps/StepFinancing";
+import { useI18n, useT } from "@/lib/i18n/react";
+import { localeOf } from "@/lib/i18n/core";
 
 const DRAFT_KEY = "agrix:register-draft:v1";
 
@@ -60,7 +63,7 @@ const DEMO_FILL: RegisterData = {
   category: "Perennial crops",
   cropType: "Coffee",
   assetName: "Vietnam Robusta Coffee",
-  estimatedValue: "500000",
+  estimatedValue: "500,000",
   totalArea: "40",
   ownerName: "Linh Nguyen",
   organization: "Highland Agri Co.",
@@ -90,9 +93,9 @@ const DEMO_FILL: RegisterData = {
   irrigation: "Drip irrigation",
   certifications: ["4C"],
   harvestSeason: "Oct – Dec",
-  operatingCosts: "180000",
-  expectedRevenue: "560000",
-  financingTarget: "350000",
+  operatingCosts: "180,000",
+  expectedRevenue: "560,000",
+  financingTarget: "350,000",
   termMonths: "6",
   expectedReturn: "8",
   description:
@@ -103,18 +106,20 @@ const DEMO_FILL: RegisterData = {
 function toListing(d: RegisterData) {
   const category = cropToCategory[d.cropType] ?? "coffee";
   const country = countryOfProvince[d.province] ?? "Vietnam";
-  const target = Number(d.financingTarget) || 0;
-  const lat = Number(d.latitude);
-  const lng = Number(d.longitude);
+  // Values are validated before submission; the fallbacks only keep the live preview rendering while typing.
+  const or0 = (r: { ok: true; value: number } | { ok: false }) => (r.ok ? r.value : 0);
+  const target = or0(numbers.financingTarget(d.financingTarget));
+  const lat = or0(parseCoordinate(d.latitude));
+  const lng = or0(parseCoordinate(d.longitude));
   return {
     category,
     country,
-    areaHa: Number(d.totalArea) || 0,
-    coords: [Number.isFinite(lat) ? lat : 0, Number.isFinite(lng) ? lng : 0] as [number, number],
+    areaHa: or0(numbers.totalArea(d.totalArea)),
+    coords: [lat, lng] as [number, number],
     target,
-    value: Number(d.estimatedValue) || 0,
-    term: Number(d.termMonths) || 0,
-    ret: Number(d.expectedReturn) || 0,
+    value: or0(numbers.estimatedValue(d.estimatedValue)),
+    term: or0(parseNumeric(d.termMonths, { maxDecimals: 0 })),
+    ret: or0(parseQuantity(d.expectedReturn, 2)),
     location: `${d.province}, ${country}`,
   };
 }
@@ -152,15 +157,16 @@ function previewAsset(d: RegisterData): Asset {
 }
 
 function Stepper({ step, maxReached, onGo }: { step: number; maxReached: number; onGo: (i: number) => void }) {
+  const t = useT();
   return (
     <>
-      <ol className="hidden items-center sm:flex" aria-label="Registration progress">
+      <ol className="hidden items-center sm:flex" aria-label={t("Registration progress")}>
         {STEPS.map((label, i) => {
           const done = i < step;
           const current = i === step;
           const reachable = i <= maxReached && !current;
           return (
-            <li key={label} className={cn("flex items-center", i < STEPS.length - 1 && "flex-1")}>
+            <li key={label} className={cn("flex items-center", i < STEPS.length - 1 ? "min-w-0 flex-1" : "shrink-0")}>
               <button
                 type="button"
                 disabled={!reachable}
@@ -176,8 +182,8 @@ function Stepper({ step, maxReached, onGo }: { step: number; maxReached: number;
                 >
                   {done ? <Check className="h-4 w-4" aria-hidden="true" /> : i + 1}
                 </span>
-                <span className={cn("whitespace-nowrap text-sm", current ? "font-bold text-ink" : "font-medium text-ink-muted", reachable && "group-hover:text-ink")}>
-                  {i + 1}. {label}
+                <span className={cn("whitespace-nowrap text-sm", current ? "font-bold text-ink" : "sr-only font-medium text-ink-muted lg:not-sr-only", reachable && "group-hover:text-ink")}>
+                  {i + 1}. {t(label)}
                 </span>
               </button>
               {i < STEPS.length - 1 && <span aria-hidden="true" className={cn("mx-3 h-px flex-1 transition-colors", i < step ? "bg-green-600" : "bg-line")} />}
@@ -187,14 +193,14 @@ function Stepper({ step, maxReached, onGo }: { step: number; maxReached: number;
       </ol>
       <div className="sm:hidden">
         <p className="text-sm font-semibold">
-          Step {step + 1} of {STEPS.length} · <span className="text-green-700">{STEPS[step]}</span>
+          {t("Step {n} of {total}", { n: step + 1, total: STEPS.length })} · <span className="text-green-700">{t(STEPS[step])}</span>
         </p>
         <div
           role="progressbar"
           aria-valuemin={1}
           aria-valuemax={STEPS.length}
           aria-valuenow={step + 1}
-          aria-label="Registration progress"
+          aria-label={t("Registration progress")}
           className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"
         >
           <div className="h-full rounded-full bg-green-600 transition-[width] duration-200" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} />
@@ -206,6 +212,7 @@ function Stepper({ step, maxReached, onGo }: { step: number; maxReached: number;
 
 export function RegisterWizard() {
   useReserveBottom(72);
+  const { t, lang } = useI18n();
   const [step, setStep] = useState(0);
   const [maxReached, setMaxReached] = useState(0);
   const [data, setData] = useState<RegisterData>(initialData);
@@ -226,7 +233,7 @@ export function RegisterWizard() {
       setData({ ...initialData, ...draft.data });
       setStep(Math.min(Math.max(draft.step ?? 0, 0), STEPS.length - 1));
       setMaxReached(Math.min(Math.max(draft.step ?? 0, 0), STEPS.length - 1));
-      toast("Draft restored", { description: "We picked up where you left off." });
+      toast(t("Draft restored"), { description: t("We picked up where you left off.") });
     }
     hydrated.current = true;
   }, []);
@@ -235,11 +242,11 @@ export function RegisterWizard() {
   useEffect(() => {
     if (!hydrated.current || submitted || !touched) return;
     setSaving(true);
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (saveDraft({ step, data })) setSavedAt(new Date());
       setSaving(false);
     }, 700);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [data, step, submitted, touched]);
 
   // Warn before leaving with an unsubmitted registration.
@@ -274,7 +281,7 @@ export function RegisterWizard() {
       const found = validateStep(step, data);
       if (Object.keys(found).length) {
         setShowErrors(true);
-        toast.error("Please fix the highlighted fields to continue");
+        toast.error(t("Please fix the highlighted fields to continue"));
         return;
       }
       setShowErrors(false);
@@ -286,13 +293,23 @@ export function RegisterWizard() {
     }
     if (!compliance) {
       setShowErrors(true);
-      toast.error("Confirm the compliance statement to submit");
+      toast.error(t("Confirm the compliance statement to submit"));
       return;
     }
     if (data.documents.length === 0) {
-      toast.error("Attach the land certificate to submit", { description: "Add it in step 2, Ownership." });
+      toast.error(t("Attach the land certificate to submit"), { description: t("Add it in step 2, Ownership.") });
       goTo(1);
       return;
+    }
+    // Re-validate every step so a restored draft or a skipped step can never submit invalid numbers.
+    for (let i = 0; i < LAST_STEP; i++) {
+      if (Object.keys(validateStep(i, data)).length) {
+        toast.error(t("Fix the highlighted fields before submitting"), { description: t("Check step {n}, {name}.", { n: i + 1, name: t(STEPS[i]) }) });
+        setShowErrors(true);
+        setStep(i);
+        scrollTop();
+        return;
+      }
     }
     if (submitting) return;
     setSubmitting(true);
@@ -316,7 +333,7 @@ export function RegisterWizard() {
       setSubmitting(false);
       setSubmitted({ ref: asset.id, id: asset.id, name: asset.name });
       clearDraft();
-      toast.success("Asset submitted for approval");
+      toast.success(t("Asset submitted for approval"));
       scrollTop();
     }, 900);
   };
@@ -340,17 +357,17 @@ export function RegisterWizard() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
             <CheckCircle2 className="h-8 w-8" />
           </div>
-          <h2 className="mt-5 text-2xl font-extrabold">Submitted for approval</h2>
+          <h2 className="mt-5 text-2xl font-extrabold">{t("Submitted for approval")}</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
-            <strong className="text-ink">{submitted.name}</strong> is now <strong className="text-ink">Pending Review</strong>. It becomes visible to investors after an admin approves it (simulated review).
+            <strong className="text-ink">{submitted.name}</strong> {t("is now")} <strong className="text-ink">{t("Pending Review")}</strong>. {t("It becomes visible to investors after an admin approves it (simulated review).")}
           </p>
-          <p className="figure mt-4 inline-block rounded-lg bg-green-50 px-3 py-1.5 text-sm font-semibold text-green-700">Asset ID {submitted.id}</p>
+          <p className="figure mt-4 inline-block rounded-lg bg-green-50 px-3 py-1.5 text-sm font-semibold text-green-700">{t("Asset ID {id}", { id: submitted.id })}</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild>
-              <Link href={`/seller/assets/${submitted.id}`}>View asset status</Link>
+              <Link href={`/seller/assets/${submitted.id}`}>{t("View asset status")}</Link>
             </Button>
             <Button variant="outline" onClick={reset}>
-              Create another asset
+              {t("Create another asset")}
             </Button>
           </div>
         </div>
@@ -373,10 +390,10 @@ export function RegisterWizard() {
               onClick={() => {
                 setTouched(true);
                 setData(DEMO_FILL);
-                toast("Form filled with sample data");
+                toast(t("Form filled with sample data"));
               }}
             >
-              Fill sample data
+              {t("Fill sample data")}
             </Button>
           )
         }
@@ -387,7 +404,7 @@ export function RegisterWizard() {
 
       <section className="card p-4 sm:p-6" aria-labelledby="step-title">
         <h2 id="step-title" className="mb-5 text-xl font-bold">
-          {step === 2 ? <span className="sr-only">Step 3: Location</span> : `${step + 1}. ${STEPS[step]}`}
+          {step === 2 ? <span className="sr-only">{t("Step 3: Location")}</span> : `${step + 1}. ${t(STEPS[step])}`}
         </h2>
         {step === 0 && <Step1AssetType {...stepProps} />}
         {step === 1 && <Step2Ownership {...stepProps} />}
@@ -412,21 +429,21 @@ export function RegisterWizard() {
           <p className="hidden items-center gap-2 text-xs text-ink-muted sm:flex" aria-live="polite">
             {touched && saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Saving draft…
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> {t("Saving draft…")}
               </>
             ) : (
               <>
                 <CloudCheck className="h-4 w-4" aria-hidden="true" />
-                {savedAt ? `Auto-saved at ${savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Draft saves automatically as you type"}
+                {savedAt ? t("Auto-saved at {time}", { time: savedAt.toLocaleTimeString(localeOf(lang), { hour: "2-digit", minute: "2-digit" }) }) : t("Draft saves automatically as you type")}
               </>
             )}
           </p>
           <div className="ml-auto flex w-full gap-3 sm:w-auto">
             <Button variant="outline" className="flex-1 sm:flex-none sm:px-8" disabled={step === 0 || submitting} onClick={() => goTo(step - 1)}>
-              Back
+              {t("Back")}
             </Button>
             <Button className="flex-[2] sm:flex-none" disabled={submitting} onClick={next}>
-              {step === LAST_STEP ? (submitting ? "Submitting…" : "Submit for Approval") : "Save & Continue"}
+              {step === LAST_STEP ? (submitting ? t("Submitting…") : t("Submit for Approval")) : t("Save & Continue")}
               {step < LAST_STEP && <ArrowRight className="h-4 w-4" />}
             </Button>
           </div>

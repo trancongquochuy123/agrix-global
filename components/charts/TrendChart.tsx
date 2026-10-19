@@ -2,6 +2,7 @@
 
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { axisProps, CHART, ChartTooltip } from "./ChartPrimitives";
+import { useT } from "@/lib/i18n/react";
 
 export interface TrendSeries {
   key: string;
@@ -38,6 +39,7 @@ export function TrendChart({
   yTicks,
   asLine,
 }: TrendChartProps) {
+  const t = useT();
   const last = data[data.length - 1] as Record<string, string | number> | undefined;
   const gradientId = (k: string) => `grad-${k}`;
   const common = {
@@ -45,7 +47,7 @@ export function TrendChart({
     margin: { top: 10, right: 12, left: 0, bottom: 0 },
   };
   const grid = <CartesianGrid stroke={CHART.grid} strokeDasharray="3 4" vertical={false} />;
-  const xAxis = <XAxis dataKey={xKey} {...axisProps} interval={xInterval} minTickGap={24} />;
+  const xAxis = <XAxis dataKey={xKey} {...axisProps} interval={xInterval} minTickGap={24} tickFormatter={(v) => t(String(v))} />;
   const yAxis = <YAxis {...axisProps} width={46} tickFormatter={yFormat} domain={yDomain} ticks={yTicks} />;
   const tooltip = (
     <Tooltip
@@ -55,7 +57,7 @@ export function TrendChart({
   );
 
   return (
-    <div role="img" aria-label={ariaLabel} className="h-full min-h-[200px] w-full">
+    <div role="img" aria-label={t(ariaLabel)} className="h-full min-h-[200px] w-full">
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         {asLine ? (
           <LineChart {...common}>

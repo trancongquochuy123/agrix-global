@@ -9,10 +9,12 @@ import { useHydrated, useSession } from "@/lib/demo/hooks";
 import { homeOf } from "@/lib/demo/routes";
 import type { Role } from "@/lib/demo/types";
 import { Header } from "./Header";
+import { useT } from "@/lib/i18n/react";
 
 function ShellSkeleton() {
+  const t = useT();
   return (
-    <div role="status" aria-label="Loading workspace" className="min-h-screen md:pl-[72px] xl:pl-60">
+    <div role="status" aria-label={t("Loading workspace")} className="min-h-screen md:pl-[72px] xl:pl-60">
       <div className="h-16 border-b border-line" />
       <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-6 sm:px-6 xl:px-8">
         <Skeleton className="h-10 w-64" />
@@ -36,6 +38,7 @@ export function PortalShell({ role, children }: { role: Role; children: ReactNod
   const pathname = usePathname();
   const hydrated = useHydrated();
   const session = useSession();
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -53,7 +56,7 @@ export function PortalShell({ role, children }: { role: Role; children: ReactNod
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-pop"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
       <Sidebar role={role} expanded={expanded} onToggle={() => setExpanded((v) => !v)} />
       <MobileNavigation role={role} open={mobileOpen} onOpenChange={setMobileOpen} />

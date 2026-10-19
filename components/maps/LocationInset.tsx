@@ -1,5 +1,8 @@
+"use client";
+
 import { VIETNAM_OUTLINE } from "@/data/locations";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const MIN_LAT = 8;
 const MAX_LAT = 23.8;
@@ -16,6 +19,7 @@ export function LocationInset({
   label: string;
   className?: string;
 }) {
+  const t = useT();
   const w = 120;
   const h = 150;
   const project = ([lat, lng]: [number, number]) => [
@@ -35,7 +39,7 @@ export function LocationInset({
         className,
       )}
       role="img"
-      aria-label={`Location of ${label} within Vietnam`}
+      aria-label={t("Location of {place} within Vietnam", { place: label })}
     >
       <svg viewBox={`0 0 ${w} ${h}`} className="h-[96px] w-[78px] sm:h-[120px] sm:w-[96px]">
         <path d={d} fill="#0E513D" stroke="#8FC16B" strokeWidth="1.4" strokeLinejoin="round" />

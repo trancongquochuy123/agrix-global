@@ -6,6 +6,7 @@ import { useMap } from "react-leaflet";
 import type { LatLngBoundsExpression } from "leaflet";
 import { Maximize2, Minus, Plus, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 export const SATELLITE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 export const SATELLITE_ATTRIBUTION = "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics";
@@ -37,6 +38,7 @@ export function MapControls({
   className?: string;
 }) {
   const map = useMap();
+  const t = useT();
   const ref = useStopPropagation<HTMLDivElement>();
 
   const toggleFullscreen = () => {
@@ -49,18 +51,18 @@ export function MapControls({
   return (
     <div ref={ref} className={cn("absolute right-3 top-3 z-[1000] flex flex-col gap-2", className)}>
       <div className="overflow-hidden rounded-lg border border-line bg-white shadow-card">
-        <button type="button" aria-label="Zoom in" className={controlBtn} onClick={() => map.zoomIn()}>
+        <button type="button" aria-label={t("Zoom in")} className={controlBtn} onClick={() => map.zoomIn()}>
           <Plus className="h-4 w-4" />
         </button>
         <div className="h-px bg-line" />
-        <button type="button" aria-label="Zoom out" className={controlBtn} onClick={() => map.zoomOut()}>
+        <button type="button" aria-label={t("Zoom out")} className={controlBtn} onClick={() => map.zoomOut()}>
           <Minus className="h-4 w-4" />
         </button>
       </div>
       {onToggleLayer && (
         <button
           type="button"
-          aria-label="Switch base map"
+          aria-label={t("Switch base map")}
           className={cn(controlBtn, "rounded-lg border border-line bg-white shadow-card")}
           onClick={onToggleLayer}
         >
@@ -70,7 +72,7 @@ export function MapControls({
       {fullscreen && (
         <button
           type="button"
-          aria-label="Toggle fullscreen"
+          aria-label={t("Toggle fullscreen")}
           className={cn(controlBtn, "rounded-lg border border-line bg-white shadow-card")}
           onClick={toggleFullscreen}
         >
@@ -98,6 +100,7 @@ export function MapLegend({
   onToggle?: (id: string) => void;
   className?: string;
 }) {
+  const t = useT();
   const ref = useStopPropagation<HTMLDivElement>();
   return (
     <div
@@ -135,12 +138,12 @@ export function MapLegend({
                   style={{ opacity: checked ? 1 : 0.6 }}
                 >
                   {swatch}
-                  {item.label}
+                  {t(item.label)}
                 </button>
               ) : (
                 <span className="flex items-center gap-2">
                   {swatch}
-                  {item.label}
+                  {t(item.label)}
                 </span>
               )}
             </li>

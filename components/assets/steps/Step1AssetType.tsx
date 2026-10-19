@@ -1,8 +1,12 @@
+"use client";
+
 import { Field, InputWithSuffix, MoneyInput, inputProps } from "../FormField";
 import { categoryOptions, cropOptions, currencies } from "../formModel";
 import type { StepProps } from "./StepProps";
+import { useT } from "@/lib/i18n/react";
 
 export function Step1AssetType({ data, update, errors }: StepProps) {
+  const t = useT();
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <Field id="category" label="Asset category" required>
@@ -12,7 +16,9 @@ export function Step1AssetType({ data, update, errors }: StepProps) {
           onChange={(e) => update({ category: e.target.value, cropType: cropOptions[e.target.value][0], operationsCrop: cropOptions[e.target.value][0] })}
         >
           {categoryOptions.map((c) => (
-            <option key={c}>{c}</option>
+            <option key={c} value={c}>
+              {t(c)}
+            </option>
           ))}
         </select>
       </Field>
@@ -23,7 +29,9 @@ export function Step1AssetType({ data, update, errors }: StepProps) {
           onChange={(e) => update({ cropType: e.target.value, operationsCrop: e.target.value })}
         >
           {cropOptions[data.category].map((c) => (
-            <option key={c}>{c}</option>
+            <option key={c} value={c}>
+              {t(c)}
+            </option>
           ))}
         </select>
       </Field>
@@ -32,7 +40,7 @@ export function Step1AssetType({ data, update, errors }: StepProps) {
           {...inputProps("assetName", errors.assetName)}
           value={data.assetName}
           onChange={(e) => update({ assetName: e.target.value })}
-          placeholder="e.g. Highland Coffee Estate"
+          placeholder={t("e.g. Highland Coffee Estate")}
           autoComplete="off"
         />
       </Field>
@@ -50,10 +58,9 @@ export function Step1AssetType({ data, update, errors }: StepProps) {
         <InputWithSuffix suffix="ha">
           <input
             {...inputProps("totalArea", errors.totalArea)}
-            type="number"
-            min="0"
-            step="0.1"
+            type="text"
             inputMode="decimal"
+            autoComplete="off"
             value={data.totalArea}
             onChange={(e) => update({ totalArea: e.target.value })}
             placeholder="125.6"

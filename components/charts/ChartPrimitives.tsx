@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useT } from "@/lib/i18n/react";
 
 export const CHART = {
   forest: "#0E513D",
@@ -37,14 +38,15 @@ export function ChartTooltip({
   label?: string | number;
   format?: (value: number, name: string) => ReactNode;
 }) {
+  const t = useT();
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-pop">
-      {label !== undefined && <p className="mb-1 font-semibold text-ink">{label}</p>}
+      {label !== undefined && <p className="mb-1 font-semibold text-ink">{t(String(label))}</p>}
       {payload.map((p) => (
         <p key={String(p.name)} className="flex items-center gap-2 text-ink-muted">
           <span className="h-2 w-2 rounded-full" style={{ background: p.color }} aria-hidden="true" />
-          <span>{p.name}</span>
+          <span>{t(String(p.name ?? ""))}</span>
           <span className="figure ml-auto pl-3 font-semibold text-ink">
             {format ? format(Number(p.value), String(p.name)) : p.value}
           </span>

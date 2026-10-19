@@ -9,8 +9,9 @@ import { MapPanel } from "@/components/maps/MapFrame";
 import { centroid, polygonAreaHa, translate, type LatLng } from "@/lib/geo";
 import { cn } from "@/lib/utils";
 import { Field, InputWithSuffix, inputProps } from "../FormField";
-import { defaultBoundary, knownPlaces, landUseTypes, provinces, type UploadedFile } from "../formModel";
+import { defaultBoundary, knownPlaces, landUseTypes, numbers, provinces, type UploadedFile } from "../formModel";
 import type { StepProps } from "./StepProps";
+import { useT } from "@/lib/i18n/react";
 
 const tools: { id: EditorTool; label: string; icon: typeof MousePointer2 }[] = [
   { id: "select", label: "Select and move points", icon: MousePointer2 },
@@ -35,6 +36,7 @@ function QuickUpload({
   multiple?: boolean;
   onFiles: (files: UploadedFile[]) => void;
 }) {
+  const t = useT();
   const ref = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -45,7 +47,7 @@ function QuickUpload({
         accept={accept}
         multiple={multiple}
         className="sr-only"
-        aria-label={label}
+        aria-label={t(label)}
         onChange={(e) => {
           onFiles(toUploaded(e.target.files));
           e.target.value = "";
@@ -56,19 +58,21 @@ function QuickUpload({
         onClick={() => ref.current?.click()}
         className="rounded-md border border-line bg-white px-2.5 py-1 text-xs font-semibold text-green-700 transition-colors hover:bg-green-50"
       >
-        Upload
+        {t("Upload")}
       </button>
     </>
   );
 }
 
 export function Step3Location({ data, update, errors }: StepProps) {
+  const t = useT();
   const [tool, setTool] = useState<EditorTool>("select");
   const [street, setStreet] = useState(false);
   const [query, setQuery] = useState("Dak Lak, Vietnam");
   const [center, setCenter] = useState<LatLng>(() => centroid(data.vertices));
   const area = polygonAreaHa(data.vertices);
-  const declared = Number(data.totalArea);
+  const parsedArea = numbers.totalArea(data.totalArea);
+  const declared = parsedArea.ok ? parsedArea.value : 0;
   const mismatch = declared > 0 && area > 0 && Math.abs(declared - area) / declared > 0.2;
 
   const setVertices = (next: LatLng[]) => {
@@ -81,7 +85,7 @@ export function Step3Location({ data, update, errors }: StepProps) {
     const q = query.trim().toLowerCase();
     const place = knownPlaces.find((p) => q.includes(p.match));
     if (!place) {
-      toast.error("Location not found", { description: "Try a province such as Dak Lak, Lam Dong, Gia Lai or An Giang." });
+      toast.error(t("Location not found"), { description: t("Try a province such as Dak Lak, Lam Dong, Gia Lai or An Giang.") });
       return;
     }
     const [cLat, cLng] = centroid(data.vertices);
@@ -94,7 +98,7 @@ export function Step3Location({ data, update, errors }: StepProps) {
       longitude: place.coords[1].toFixed(4),
     });
     setCenter(place.coords);
-    toast.success(`Map centred on ${place.province}`);
+    toast.success(t("Map centred on {place}", { place: place.province }));
   };
 
   const onCoord = (key: "latitude" | "longitude", value: string) => {
@@ -145,7 +149,7 @@ export function Step3Location({ data, update, errors }: StepProps) {
     {
       id: "photos",
       title: "Farm photos",
-      desc: `Upload at least 3 photos showing the asset and surrounding area${data.farmPhotos.length ? ` (${data.farmPhotos.length}/3)` : ""}`,
+      desc: `${t("Upload at least 3 photos showing the asset and surrounding area")}${data.farmPhotos.length ? ` (${data.farmPhotos.length}/3)` : ""}`,
       icon: Camera,
       done: data.farmPhotos.length >= 3,
       action: (
@@ -162,8 +166,8 @@ export function Step3Location({ data, update, errors }: StepProps) {
             <MapPin className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-lg font-bold leading-tight">Asset Location</h3>
-            <p className="text-sm text-ink-muted">Define the location and boundary of your agricultural asset</p>
+            <h3 className="text-lg font-bold leading-tight">{t("Asset Location")}</h3>
+            <p className="text-sm text-ink-muted">{t("Define the location and boundary of your agricultural asset")}</p>
           </div>
         </div>
 
@@ -179,28 +183,28 @@ export function Step3Location({ data, update, errors }: StepProps) {
           />
           <form onSubmit={search} role="search" className="absolute left-3 top-3 z-[1000] w-[min(16rem,calc(100%-6rem))]">
             <label className="relative block">
-              <span className="sr-only">Search location</span>
+              <span className="sr-only">{t("Search location")}</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="h-10 w-full rounded-lg border border-line bg-white pl-9 pr-8 text-sm shadow-card focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20"
-                placeholder="Search location"
+                placeholder={t("Search location")}
               />
               {query && (
-                <button type="button" aria-label="Clear search" onClick={() => setQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-ink-muted hover:text-ink">
+                <button type="button" aria-label={t("Clear search")} onClick={() => setQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-ink-muted hover:text-ink">
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </label>
           </form>
-          <div className="absolute left-3 top-16 z-[1000] flex flex-col overflow-hidden rounded-lg border border-line bg-white shadow-card" role="toolbar" aria-label="Boundary tools" aria-orientation="vertical">
+          <div className="absolute left-3 top-16 z-[1000] flex flex-col overflow-hidden rounded-lg border border-line bg-white shadow-card" role="toolbar" aria-label={t("Boundary tools")} aria-orientation="vertical">
             {tools.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
-                title={label}
-                aria-label={label}
+                title={t(label)}
+                aria-label={t(label)}
                 aria-pressed={tool === id}
                 onClick={() => setTool(id)}
                 className={cn("flex h-10 w-10 items-center justify-center transition-colors", tool === id ? "bg-forest-800 text-white" : "text-ink hover:bg-green-50")}
@@ -210,11 +214,11 @@ export function Step3Location({ data, update, errors }: StepProps) {
             ))}
             <button
               type="button"
-              title="Reset boundary"
-              aria-label="Reset boundary"
+              title={t("Reset boundary")}
+              aria-label={t("Reset boundary")}
               onClick={() => {
                 setVertices(defaultBoundary(centroid(data.vertices)));
-                toast("Boundary reset to the default 125.6 ha polygon");
+                toast(t("Boundary reset to the default 125.6 ha polygon"));
               }}
               className="flex h-10 w-10 items-center justify-center border-t border-line text-ink transition-colors hover:bg-green-50"
             >
@@ -223,11 +227,11 @@ export function Step3Location({ data, update, errors }: StepProps) {
           </div>
         </MapPanel>
         <p className="mt-2 text-xs text-ink-muted" aria-live="polite">
-          {tool === "draw" ? "Click the map to add boundary points." : tool === "delete" ? "Click a point to remove it (minimum 3)." : "Drag points to reshape the boundary."}
+          {t(tool === "draw" ? "Click the map to add boundary points." : tool === "delete" ? "Click a point to remove it (minimum 3)." : "Drag points to reshape the boundary.")}
         </p>
         {errors.boundary && (
           <p role="alert" className="mt-1 text-sm font-medium text-danger">
-            {errors.boundary}
+            {t(errors.boundary)}
           </p>
         )}
 
@@ -237,7 +241,7 @@ export function Step3Location({ data, update, errors }: StepProps) {
           </Field>
           <Field id="province" label="Province/City" required error={errors.province}>
             <select {...inputProps("province", errors.province)} value={data.province} onChange={(e) => update({ province: e.target.value })}>
-              <option value="">Select a province</option>
+              <option value="">{t("Select a province")}</option>
               {provinces.map((p) => (
                 <option key={p}>{p}</option>
               ))}
@@ -251,7 +255,7 @@ export function Step3Location({ data, update, errors }: StepProps) {
           <Field id="longitude" label="Longitude" required error={errors.longitude}>
             <input {...inputProps("longitude", errors.longitude)} inputMode="decimal" value={data.longitude} onChange={(e) => onCoord("longitude", e.target.value)} />
           </Field>
-          <Field id="area" label="Area (hectares)" required hint={mismatch ? `Differs from declared ${declared} ha` : undefined}>
+          <Field id="area" label="Area (hectares)" required hint={mismatch ? t("Differs from declared {n} ha", { n: declared }) : undefined}>
             <InputWithSuffix suffix="ha">
               <input id="area" readOnly value={area.toFixed(1)} className="field bg-green-50/60 pr-9" aria-describedby="area-hint" />
             </InputWithSuffix>
@@ -259,7 +263,9 @@ export function Step3Location({ data, update, errors }: StepProps) {
           <Field id="landUse" label="Land use type" required>
             <select {...inputProps("landUse")} value={data.landUse} onChange={(e) => update({ landUse: e.target.value })}>
               {landUseTypes.map((l) => (
-                <option key={l}>{l}</option>
+                <option key={l} value={l}>
+                  {t(l)}
+                </option>
               ))}
             </select>
           </Field>
@@ -272,8 +278,8 @@ export function Step3Location({ data, update, errors }: StepProps) {
             <FileText className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h3 id="data-required" className="text-lg font-bold leading-tight">Data Required</h3>
-            <p className="mt-1 text-xs text-ink-muted">Please prepare the following documents and information to verify your asset. All data will be reviewed for compliance.</p>
+            <h3 id="data-required" className="text-lg font-bold leading-tight">{t("Data Required")}</h3>
+            <p className="mt-1 text-xs text-ink-muted">{t("Please prepare the following documents and information to verify your asset. All data will be reviewed for compliance.")}</p>
           </div>
         </div>
         <ul className="mt-4 space-y-2.5">
@@ -283,8 +289,8 @@ export function Step3Location({ data, update, errors }: StepProps) {
                 {c.done ? <CheckCircle2 className="h-6 w-6" aria-hidden="true" /> : <c.icon className="h-6 w-6" aria-hidden="true" />}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-tight">{c.title}</p>
-                <p className="mt-0.5 text-xs text-ink-muted">{c.desc}</p>
+                <p className="text-sm font-semibold leading-tight">{t(c.title)}</p>
+                <p className="mt-0.5 text-xs text-ink-muted">{t(c.desc)}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 <span
@@ -293,7 +299,7 @@ export function Step3Location({ data, update, errors }: StepProps) {
                     c.done ? "bg-green-100 text-green-700" : "bg-[#FBEFD9] text-[#8A5A0B]",
                   )}
                 >
-                  {c.done ? "Completed" : "Pending"}
+                  {c.done ? t("Completed") : t("Pending")}
                 </span>
                 {!c.done && c.action}
               </div>
@@ -303,8 +309,8 @@ export function Step3Location({ data, update, errors }: StepProps) {
         <p className="mt-4 flex items-start gap-2.5 border-t border-line pt-4 text-xs text-ink-muted">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
-            <strong className="block text-ink">Secure Upload</strong>
-            Files are only recorded by name in this prototype and never leave your browser.
+            <strong className="block text-ink">{t("Secure Upload")}</strong>
+            {t("Files are only recorded by name in this prototype and never leave your browser.")}
           </span>
         </p>
       </aside>

@@ -4,6 +4,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -39,16 +40,21 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
         {...props}
       >
         {children}
-        {!hideClose && (
-          <DialogPrimitive.Close
-            aria-label="Close"
-            className="absolute right-3 top-3 rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-50 hover:text-ink"
-          >
-            <X className="h-4 w-4" />
-          </DialogPrimitive.Close>
-        )}
+        {!hideClose && <CloseButton />}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   ),
 );
 DialogContent.displayName = "DialogContent";
+
+function CloseButton() {
+  const t = useT();
+  return (
+          <DialogPrimitive.Close
+            aria-label={t("Close")}
+            className="absolute right-3 top-3 rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-50 hover:text-ink"
+          >
+            <X className="h-4 w-4" />
+          </DialogPrimitive.Close>
+  );
+}

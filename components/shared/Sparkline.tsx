@@ -1,4 +1,7 @@
+"use client";
+
 import { useId } from "react";
+import { useT } from "@/lib/i18n/react";
 
 export function Sparkline({
   data,
@@ -13,6 +16,7 @@ export function Sparkline({
   width?: number;
   height?: number;
 }) {
+  const t = useT();
   const id = useId();
   if (data.length < 2) return null;
   const min = Math.min(...data);
@@ -32,7 +36,7 @@ export function Sparkline({
       height={height}
       className={className}
       role="img"
-      aria-label="Trend sparkline"
+      aria-label={t("Trend sparkline")}
     >
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">

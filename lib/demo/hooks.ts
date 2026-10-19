@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { demoStore } from "./store";
+import { demoStore, isSuspended } from "./store";
 import type { DemoState, Role, Session } from "./types";
 
 const subscribeNoop = () => () => {};
@@ -15,8 +15,10 @@ export function useDemo(): DemoState {
   return useSyncExternalStore(demoStore.subscribe, demoStore.getSnapshot, demoStore.getServerSnapshot);
 }
 
+/** The signed-in session, or null when there is none or the account has been suspended. */
 export function useSession(): Session | null {
-  return useDemo().session;
+  const s = useDemo();
+  return s.session && !isSuspended(s, s.session.userId) ? s.session : null;
 }
 
 export function useRoleNotices(role: Role | undefined) {

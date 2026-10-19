@@ -20,6 +20,7 @@ import { performanceSeries, portfolioTotals, positionsOf, publishedAssets } from
 import { remainingUsd } from "@/lib/demo/store";
 import { useNow } from "@/lib/demo/useNow";
 import { PositionsTable } from "./PositionsTable";
+import { useT } from "@/lib/i18n/react";
 
 export function allocationOf(positions: ReturnType<typeof positionsOf>) {
   const by = new Map<string, number>();
@@ -29,6 +30,7 @@ export function allocationOf(positions: ReturnType<typeof positionsOf>) {
 
 export function InvestorDashboard() {
   const demo = useDemo();
+  const t = useT();
   const now = useNow();
   const me = demo.session!;
   const positions = positionsOf(demo, me.userId, now);
@@ -44,18 +46,18 @@ export function InvestorDashboard() {
   return (
     <div>
       <PageHeader
-        title={`Welcome back, ${first}`}
+        title={t("Welcome back, {name}", { name: first })}
         subtitle="Your portfolio at a glance."
         actions={
           <Button asChild>
-            <Link href="/investor/marketplace">Explore opportunities</Link>
+            <Link href="/investor/marketplace">{t("Explore opportunities")}</Link>
           </Button>
         }
       />
 
       <FadeIn>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={<Wallet className="h-5 w-5" />} label="Total Invested" value={usd(totals.invested)} comparison={`${totals.count} positions`} />
+          <StatCard icon={<Wallet className="h-5 w-5" />} label="Total Invested" value={usd(totals.invested)} comparison={t("{n} positions", { n: totals.count })} />
           <StatCard icon={<LineChart className="h-5 w-5" />} label="Portfolio Value" value={usd(Math.round(totals.value))} change={`+${usd(Math.round(totals.accrued))}`} comparison="accrued, illustrative" />
           <StatCard icon={<Coins className="h-5 w-5" />} label="Estimated Returns" value={usd(Math.round(totals.expected))} comparison="at maturity, illustrative" />
           <StatCard icon={<Layers className="h-5 w-5" />} label="Active Investments" value={String(totals.count)} comparison="across commodities" />
@@ -69,7 +71,7 @@ export function InvestorDashboard() {
           description="Browse approved opportunities and place a simulated investment to see your portfolio come to life."
           action={
             <Button asChild>
-              <Link href="/investor/marketplace">Explore opportunities</Link>
+              <Link href="/investor/marketplace">{t("Explore opportunities")}</Link>
             </Button>
           }
         />
@@ -92,13 +94,13 @@ export function InvestorDashboard() {
           <ChartCard title="Allocation" subtitle="By commodity" bodyClassName="flex flex-col items-center gap-4">
             <div className="h-44 w-44 shrink-0">
               <DonutChart
-                ariaLabel={`Allocation: ${allocation.map((a) => a.name).join(", ")}`}
+                ariaLabel={`${t("Allocation")}: ${allocation.map((a) => t(a.name)).join(", ")}`}
                 data={allocation}
                 tooltipFormat={(v) => usd(v)}
                 center={
                   <>
                     <span className="figure text-lg font-bold">{usd(Math.round(totals.value))}</span>
-                    <span className="text-[11px] text-ink-muted">Total value</span>
+                    <span className="text-[11px] text-ink-muted">{t("Total value")}</span>
                   </>
                 }
               />
@@ -107,7 +109,7 @@ export function InvestorDashboard() {
               {allocation.map((a) => (
                 <li key={a.name} className="flex items-center gap-2.5">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: a.color }} aria-hidden="true" />
-                  <span className="flex-1">{a.name}</span>
+                  <span className="flex-1">{t(a.name)}</span>
                   <span className="figure font-semibold">{Math.round((a.value / totals.value) * 100)}%</span>
                 </li>
               ))}
@@ -119,7 +121,7 @@ export function InvestorDashboard() {
             title="Active investments"
             action={
               <Link href="/investor/portfolio" className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 hover:underline">
-                View portfolio <ArrowRight className="h-3.5 w-3.5" />
+                {t("View portfolio")} <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             }
           >
@@ -132,10 +134,10 @@ export function InvestorDashboard() {
         <section className="lg:col-span-2" aria-labelledby="opps">
           <div className="mb-3 flex items-center justify-between">
             <h2 id="opps" className="text-lg font-bold">
-              Opportunities for you
+              {t("Opportunities for you")}
             </h2>
             <Link href="/investor/marketplace" className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 hover:underline">
-              View all <ArrowRight className="h-3.5 w-3.5" />
+              {t("View all")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           {opportunities.length === 0 ? (
@@ -148,15 +150,15 @@ export function InvestorDashboard() {
                   <div className="p-3.5">
                     <h3 className="truncate font-bold">
                       <Link href={`/investor/marketplace/${a.slug}`} className="after:absolute after:inset-0">
-                        {a.name}
+                        {t(a.name)}
                       </Link>
                     </h3>
-                    <p className="truncate text-xs text-ink-muted">{a.location}</p>
+                    <p className="truncate text-xs text-ink-muted">{t(a.location)}</p>
                     <p className="figure mt-2 text-sm">
-                      <strong>{a.targetYield}%</strong> <span className="text-xs text-ink-muted">illustrative · {a.termMonths} mo</span>
+                      <strong>{a.targetYield}%</strong> <span className="text-xs text-ink-muted">{t("illustrative · {n} mo", { n: a.termMonths })}</span>
                     </p>
-                    <ProgressBar value={a.fundedPct} label={`${a.name} funding progress`} className="mt-2 h-1.5" />
-                    <p className="mt-1 text-xs text-ink-muted">{a.fundedPct}% funded</p>
+                    <ProgressBar value={a.fundedPct} label={t("{name} funding progress", { name: t(a.name) })} className="mt-2 h-1.5" />
+                    <p className="mt-1 text-xs text-ink-muted">{t("{pct}% funded", { pct: a.fundedPct })}</p>
                   </div>
                 </li>
               ))}
@@ -168,28 +170,28 @@ export function InvestorDashboard() {
           title="Recent transactions"
           action={
             <Link href="/investor/transactions" className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 hover:underline">
-              View all <ArrowRight className="h-3.5 w-3.5" />
+              {t("View all")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           }
         >
           {recent.length === 0 ? (
-            <p className="text-sm text-ink-muted">No transactions yet.</p>
+            <p className="text-sm text-ink-muted">{t("No transactions yet.")}</p>
           ) : (
             <ul className="divide-y divide-line">
-              {recent.map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+              {recent.map((tx) => (
+                <li key={tx.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold">{t.assetName}</p>
-                    <p className="text-xs text-ink-muted">{fmtDate(t.createdAt)}</p>
+                    <p className="truncate font-semibold">{t(tx.assetName)}</p>
+                    <p className="text-xs text-ink-muted">{fmtDate(tx.createdAt)}</p>
                   </div>
-                  <span className="figure font-semibold">{usd(t.amountUsd)}</span>
+                  <span className="figure font-semibold">{usd(tx.amountUsd)}</span>
                 </li>
               ))}
             </ul>
           )}
         </ChartCard>
       </div>
-      <p className="mt-6 text-xs text-ink-muted">Values and returns are simulated and illustrative. They are not guaranteed.</p>
+      <p className="mt-6 text-xs text-ink-muted">{t("Values and returns are simulated and illustrative. They are not guaranteed.")}</p>
     </div>
   );
 }

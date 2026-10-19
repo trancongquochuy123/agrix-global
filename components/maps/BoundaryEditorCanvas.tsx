@@ -6,6 +6,7 @@ import { MapContainer, Marker, Polygon, ScaleControl, TileLayer, useMap, useMapE
 import type { LatLng } from "@/lib/geo";
 import { centroid } from "@/lib/geo";
 import { MapControls, SATELLITE_ATTRIBUTION, SATELLITE_URL, STREET_ATTRIBUTION, STREET_URL } from "./MapChrome";
+import { useT } from "@/lib/i18n/react";
 
 export type EditorTool = "select" | "draw" | "delete";
 
@@ -41,6 +42,7 @@ function ClickToDraw({ tool, vertices, onChange }: Pick<Props, "tool" | "vertice
 }
 
 export default function BoundaryEditorCanvas({ vertices, onChange, tool, center, areaLabel, street, onToggleBase }: Props) {
+  const t = useT();
   const mid = centroid(vertices);
   return (
     <MapContainer
@@ -50,7 +52,7 @@ export default function BoundaryEditorCanvas({ vertices, onChange, tool, center,
       scrollWheelZoom={false}
       className="h-full w-full"
       style={{ cursor: tool === "draw" ? "crosshair" : undefined }}
-      aria-label="Interactive map for drawing the asset boundary"
+      aria-label={t("Interactive map for drawing the asset boundary")}
     >
       {street ? (
         <TileLayer key="street" url={STREET_URL} attribution={STREET_ATTRIBUTION} />
@@ -68,7 +70,7 @@ export default function BoundaryEditorCanvas({ vertices, onChange, tool, center,
           position={v}
           icon={handleIcon}
           draggable={tool !== "delete"}
-          title={tool === "delete" ? "Click to remove this point" : `Boundary point ${i + 1}`}
+          title={tool === "delete" ? t("Click to remove this point") : t("Boundary point {n}", { n: i + 1 })}
           eventHandlers={{
             dragend: (e) => {
               const ll = (e.target as L.Marker).getLatLng();

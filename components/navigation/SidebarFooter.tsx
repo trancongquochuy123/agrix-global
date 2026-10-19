@@ -4,6 +4,7 @@ import { useSession } from "@/lib/demo/hooks";
 import { ROLE_LABEL } from "@/lib/demo/types";
 import { LOCAL_IMAGES } from "@/data/images";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const initials = (name: string) =>
   name
@@ -15,6 +16,7 @@ const initials = (name: string) =>
 
 export function SidebarFooter({ showCard = true, showUserText = true }: { showCard?: boolean; showUserText?: boolean }) {
   const session = useSession();
+  const t = useT();
   return (
     <div className="mt-auto space-y-3 p-3">
       {showCard && (
@@ -26,8 +28,8 @@ export function SidebarFooter({ showCard = true, showUserText = true }: { showCa
             backgroundPosition: "center",
           }}
         >
-          <p className="font-heading text-[15px] font-bold leading-tight">Real Assets. Real Impact.</p>
-          <p className="mt-1 text-xs text-white/75">Sustainable agriculture for a stronger tomorrow.</p>
+          <p className="font-heading text-[15px] font-bold leading-tight">{t("Real Assets. Real Impact.")}</p>
+          <p className="mt-1 text-xs text-white/75">{t("Sustainable agriculture for a stronger tomorrow.")}</p>
         </div>
       )}
       {session && (
@@ -37,7 +39,7 @@ export function SidebarFooter({ showCard = true, showUserText = true }: { showCa
           </div>
           <div className={cn("min-w-0 leading-tight", !showUserText && "hidden")}>
             <p className="truncate text-sm font-semibold text-ink">{session.name}</p>
-            <p className="text-xs text-ink-muted">{ROLE_LABEL[session.role]}</p>
+            <p className="text-xs text-ink-muted">{t(ROLE_LABEL[session.role])}</p>
           </div>
         </div>
       )}

@@ -9,6 +9,7 @@ import { FilterSelect } from "@/components/shared/FilterBar";
 import { twinTimeline } from "@/data/analytics";
 import type { TwinLayer } from "@/types/intelligence";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const layerTabs: { id: TwinLayer; label: string }[] = [
   { id: "ndvi", label: "NDVI" },
@@ -18,6 +19,7 @@ const layerTabs: { id: TwinLayer; label: string }[] = [
 ];
 
 export function TwinWorkspace({ slug, name, detail }: { slug: string; name: string; detail: string }) {
+  const t = useT();
   const [layer, setLayer] = useState<TwinLayer>("ndvi");
   const [step, setStep] = useState(3);
   const [playing, setPlaying] = useState(false);
@@ -59,41 +61,41 @@ export function TwinWorkspace({ slug, name, detail }: { slug: string; name: stri
       <MapPanel className="h-[420px] sm:h-[420px]">
         <NdviMap layer={layer} step={step} />
         <div aria-live="polite" className="absolute left-3 top-[68px] z-10 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-forest-900 shadow-card sm:top-16">
-          {twinTimeline[step]}
+          {t(twinTimeline[step])}
         </div>
         <p className="absolute bottom-[88px] left-3 z-10 rounded bg-forest-950/70 px-2 py-0.5 text-[10px] font-medium text-white/85 backdrop-blur-sm">
-          Simulated prototype data
+          {t("Simulated prototype data")}
         </p>
         <div className="absolute inset-x-3 top-3 z-10 flex flex-wrap items-start justify-between gap-2">
           <FilterSelect
             label="Visualisation layer"
             value={layer}
             onChange={(v) => setLayer(v as TwinLayer)}
-            options={layerTabs.map((t) => ({ value: t.id, label: layerMeta[t.id].label }))}
+            options={layerTabs.map((tab) => ({ value: tab.id, label: layerMeta[tab.id].label }))}
             className="w-52"
           />
-          <div role="group" aria-label="Layer mode" className="inline-flex rounded-lg bg-white p-0.5 shadow-card">
-            {layerTabs.map((t) => (
+          <div role="group" aria-label={t("Layer mode")} className="inline-flex rounded-lg bg-white p-0.5 shadow-card">
+            {layerTabs.map((tab) => (
               <button
-                key={t.id}
+                key={tab.id}
                 type="button"
-                aria-pressed={layer === t.id}
-                onClick={() => setLayer(t.id)}
+                aria-pressed={layer === tab.id}
+                onClick={() => setLayer(tab.id)}
                 className={cn(
                   "h-9 rounded-md px-2.5 text-xs font-semibold transition-colors duration-150 sm:px-3 sm:text-sm",
-                  layer === t.id ? "bg-green-50 text-green-700 shadow-sm ring-1 ring-green-100" : "text-ink-muted hover:text-ink",
+                  layer === tab.id ? "bg-green-50 text-green-700 shadow-sm ring-1 ring-green-100" : "text-ink-muted hover:text-ink",
                 )}
               >
-                {t.label}
+                {t(tab.label)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="absolute right-3 top-1/2 z-10 hidden -translate-y-[40%] rounded-lg bg-forest-950/80 p-2.5 text-[11px] text-white backdrop-blur-sm sm:block" aria-hidden="true">
-          <p className="mb-1.5 font-semibold">{meta.high}</p>
+          <p className="mb-1.5 font-semibold">{t(meta.high)}</p>
           <div className="mx-auto h-28 w-3 rounded" style={{ background: gradientCss(layer) }} />
-          <p className="mt-1.5 font-semibold">{meta.low}</p>
+          <p className="mt-1.5 font-semibold">{t(meta.low)}</p>
         </div>
 
         <div className="absolute inset-x-3 bottom-3 z-10 flex items-center gap-3 rounded-xl bg-forest-950/80 px-3.5 py-3 text-white backdrop-blur-sm">
@@ -108,15 +110,15 @@ export function TwinWorkspace({ slug, name, detail }: { slug: string; name: stri
                 setPlaying(false);
                 setStep(Number(e.target.value));
               }}
-              aria-label="Timeline month"
-              aria-valuetext={twinTimeline[step]}
+              aria-label={t("Timeline month")}
+              aria-valuetext={t(twinTimeline[step])}
               className="h-1.5 w-full cursor-pointer accent-lime-indicator"
             />
             <div className="mt-1.5 flex justify-between text-[11px] text-white/70">
               {twinTimeline.map((m, i) => (
                 <span key={m} className={cn(i === step && "font-bold text-white")}>
-                  {m.split(" ")[0]}
-                  <span className="hidden sm:inline"> {m.split(" ")[1]}</span>
+                  {t(m).split(" ")[0]}
+                  <span className="hidden sm:inline"> {t(m).split(" ")[1]}</span>
                 </span>
               ))}
             </div>
@@ -124,7 +126,7 @@ export function TwinWorkspace({ slug, name, detail }: { slug: string; name: stri
           <button
             type="button"
             onClick={togglePlay}
-            aria-label={playing ? "Pause timeline" : "Play timeline"}
+            aria-label={playing ? t("Pause timeline") : t("Play timeline")}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-forest-900 transition-transform duration-150 hover:scale-105"
           >
             {playing ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}

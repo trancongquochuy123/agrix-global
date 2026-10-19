@@ -10,13 +10,15 @@ import { TrendChart } from "@/components/charts/TrendChart";
 import { CHART } from "@/components/charts/ChartPrimitives";
 import { seeded } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 /** Small inline label used inside every AI component: results are canned, never verified. */
 export function DemoAnalysisChip({ className }: { className?: string }) {
+  const t = useT();
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700 ring-1 ring-inset ring-green-100", className)}>
       <BrainCircuit className="h-3 w-3" aria-hidden="true" />
-      Demo analysis
+      {t("Demo analysis")}
     </span>
   );
 }
@@ -134,12 +136,13 @@ const recommendationFor = (risk: number) =>
 
 /** Risk score, factor breakdown, due-diligence summary and recommendation. Shared by the investor detail page and the admin review. */
 export function AiRiskSummary({ asset, detail, audience = "investor" }: { asset: Asset; detail: AssetDetail; audience?: "investor" | "admin" }) {
+  const t = useT();
   const rec = recommendationFor(detail.riskScore);
   const tone = detail.riskScore < 33 ? "text-green-600" : detail.riskScore < 60 ? "text-warning" : "text-danger";
   const checks = [
-    `${detail.documents.length} data-room documents reviewed by the demo model`,
-    `Valuation base case ${asset.assetValueUsd.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}`,
-    `${asset.areaHa} ha boundary consistent with the stated location`,
+    t("{n} data-room documents reviewed by the demo model", { n: detail.documents.length }),
+    t("Valuation base case {amount}", { amount: asset.assetValueUsd.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) }),
+    t("{area} ha boundary consistent with the stated location", { area: asset.areaHa }),
   ];
   return (
     <ChartCard
@@ -150,27 +153,27 @@ export function AiRiskSummary({ asset, detail, audience = "investor" }: { asset:
     >
       <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
         <div className="flex flex-col items-center justify-center rounded-xl bg-green-50/50 px-4 py-5 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Risk score</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{t("Risk score")}</p>
           <p className={cn("figure mt-1 text-5xl font-extrabold leading-none", tone)}>{detail.riskScore}</p>
-          <p className="mt-1 text-xs text-ink-muted">out of 100 · lower is safer</p>
+          <p className="mt-1 text-xs text-ink-muted">{t("out of 100 · lower is safer")}</p>
           <RiskBadge level={asset.risk} className="mt-3" />
         </div>
         <ul className="space-y-3">
           {detail.riskFactors.map((f) => (
             <li key={f.id}>
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium">{f.label}</span>
+                <span className="font-medium">{t(f.label)}</span>
                 <span className="figure text-xs font-semibold text-ink-muted">{f.score}</span>
               </div>
-              <ProgressBar value={f.score} label={`${f.label} risk score`} tone={f.score < 33 ? "green" : f.score < 60 ? "warning" : "warning"} className="mt-1 h-1.5" />
-              <p className="mt-1 text-xs text-ink-muted">{f.note}</p>
+              <ProgressBar value={f.score} label={t("{label} risk score", { label: t(f.label) })} tone={f.score < 33 ? "green" : f.score < 60 ? "warning" : "warning"} className="mt-1 h-1.5" />
+              <p className="mt-1 text-xs text-ink-muted">{t(f.note)}</p>
             </li>
           ))}
         </ul>
       </div>
       <div className="mt-5 grid gap-4 border-t border-line pt-4 md:grid-cols-2">
         <div>
-          <h3 className="text-sm font-bold">Due diligence summary</h3>
+          <h3 className="text-sm font-bold">{t("Due diligence summary")}</h3>
           <ul className="mt-2 space-y-1.5 text-sm">
             {checks.map((c) => (
               <li key={c} className="flex gap-2">
@@ -183,18 +186,19 @@ export function AiRiskSummary({ asset, detail, audience = "investor" }: { asset:
         <div className="rounded-xl border border-line p-3.5">
           <h3 className="flex items-center gap-1.5 text-sm font-bold">
             <Lightbulb className="h-4 w-4 text-gold-dark" aria-hidden="true" />
-            AI recommendation
+            {t("AI recommendation")}
           </h3>
-          <p className={cn("mt-1.5 text-sm font-semibold", rec.tone)}>{rec.label}</p>
-          <p className="mt-1 text-xs text-ink-muted">{rec.text}</p>
+          <p className={cn("mt-1.5 text-sm font-semibold", rec.tone)}>{t(rec.label)}</p>
+          <p className="mt-1 text-xs text-ink-muted">{t(rec.text)}</p>
         </div>
       </div>
-      <p className="mt-4 text-xs text-ink-muted">Demo analysis built from predefined data. Not independent verification and not investment advice.</p>
+      <p className="mt-4 text-xs text-ink-muted">{t("Demo analysis built from predefined data. Not independent verification and not investment advice.")}</p>
     </ChartCard>
   );
 }
 
 export function AiInsightsTab({ asset, detail }: { asset: Asset; detail: AssetDetail }) {
+  const t = useT();
   const c = COMMODITY[asset.category];
   const data = useMemo(() => priceSeries(asset.category), [asset.category]);
   const scen = useMemo(() => scenarios(asset.category), [asset.category]);
@@ -205,13 +209,13 @@ export function AiInsightsTab({ asset, detail }: { asset: Asset; detail: AssetDe
       <ChartCard
         className="lg:col-span-7"
         title="Price Trend & Commodity Forecast"
-        subtitle={`${c.name} · ${c.unit} · 12-month history + 6-month forecast`}
+        subtitle={`${t(c.name)} · ${c.unit} · ${t("12-month history + 6-month forecast")}`}
         icon={<TrendingUp className="h-5 w-5" />}
         action={<DemoAnalysisChip />}
         bodyClassName="h-72"
       >
         <TrendChart
-          ariaLabel={`${c.name} price history and forecast (demo)`}
+          ariaLabel={t("{name} price history and forecast (demo)", { name: t(c.name) })}
           data={data}
           xKey="label"
           series={[
@@ -229,24 +233,24 @@ export function AiInsightsTab({ asset, detail }: { asset: Asset; detail: AssetDe
           {scen.map((s) => (
             <li key={s.id} className="rounded-xl border border-line p-3.5">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-sm font-semibold">{s.label}</span>
+                <span className="text-sm font-semibold">{t(s.label)}</span>
                 <span className={cn("figure text-lg font-extrabold", s.change >= 0 ? "text-green-600" : "text-danger")}>
                   {s.change >= 0 ? "+" : ""}
                   {s.change.toFixed(1)}%
                 </span>
               </div>
-              <ProgressBar value={s.prob} label={`${s.label} scenario weight`} className="mt-2 h-1.5" tone={s.id === "bear" ? "warning" : "green"} />
-              <p className="mt-1 text-xs text-ink-muted">{s.prob}% model weight · from ${last.toLocaleString("en-US")}</p>
+              <ProgressBar value={s.prob} label={t("{label} scenario weight", { label: t(s.label) })} className="mt-2 h-1.5" tone={s.id === "bear" ? "warning" : "green"} />
+              <p className="mt-1 text-xs text-ink-muted">{t("{pct}% model weight · from {price}", { pct: s.prob, price: `$${last.toLocaleString("en-US")}` })}</p>
             </li>
           ))}
         </ul>
       </ChartCard>
 
-      <ChartCard className="lg:col-span-12" title="Market Insights" subtitle={`${asset.name} · ${asset.country}`} icon={<Lightbulb className="h-5 w-5" />} action={<DemoAnalysisChip />}>
+      <ChartCard className="lg:col-span-12" title="Market Insights" subtitle={`${t(asset.name)} · ${t(asset.country)}`} icon={<Lightbulb className="h-5 w-5" />} action={<DemoAnalysisChip />}>
         <ul className="grid gap-3 md:grid-cols-3">
-          {c.insights.map((t) => (
-            <li key={t} className="rounded-xl bg-green-50/50 p-3.5 text-sm">
-              {t}
+          {c.insights.map((line) => (
+            <li key={line} className="rounded-xl bg-green-50/50 p-3.5 text-sm">
+              {t(line)}
             </li>
           ))}
         </ul>

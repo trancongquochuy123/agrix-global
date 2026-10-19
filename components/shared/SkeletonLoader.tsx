@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 export function Skeleton({ className }: { className?: string }) {
   return (
@@ -12,8 +15,9 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 export function SkeletonLoader({ lines = 3, className }: { lines?: number; className?: string }) {
+  const t = useT();
   return (
-    <div role="status" aria-label="Loading" className={cn("space-y-2.5", className)}>
+    <div role="status" aria-label={t("Loading")} className={cn("space-y-2.5", className)}>
       {Array.from({ length: lines }, (_, i) => (
         <Skeleton key={i} className={cn("h-4", i === lines - 1 ? "w-2/3" : "w-full")} />
       ))}

@@ -6,6 +6,8 @@ import { getAssetDetail, knownAssetBySlug, COFFEE_SLUG } from "@/data/assets";
 import type { SensorPoint } from "@/types/intelligence";
 import { boundsOf, centroid } from "@/lib/geo";
 import { FitOnResize, dotIcon, MapControls, MapLegend, SATELLITE_ATTRIBUTION, SATELLITE_URL } from "./MapChrome";
+import type { TFunction } from "@/lib/i18n/core";
+import { useT } from "@/lib/i18n/react";
 
 export const sensorColors: Record<SensorPoint["kind"], string> = {
   soil: "#E8683A",
@@ -14,11 +16,11 @@ export const sensorColors: Record<SensorPoint["kind"], string> = {
   water: "#26B5C9",
 };
 
-const readings: Record<SensorPoint["kind"], (id: string) => string> = {
-  soil: (id) => `Moisture ${id === "s2" ? 34 : id === "s1" ? 29 : 41}% · pH 6.${id === "s3" ? 4 : 1}`,
-  weather: () => "26°C · 62% humidity · 8 km/h wind",
-  camera: () => "Canopy feed online · last frame 2 min ago",
-  water: (id) => (id === "h1" ? "Reservoir level 78%" : "Flow 14 L/s"),
+const readings: Record<SensorPoint["kind"], (id: string, t: TFunction) => string> = {
+  soil: (id, t) => t("Moisture {pct}% · pH {ph}", { pct: id === "s2" ? 34 : id === "s1" ? 29 : 41, ph: `6.${id === "s3" ? 4 : 1}` }),
+  weather: (_, t) => t("26°C · 62% humidity · 8 km/h wind"),
+  camera: (_, t) => t("Canopy feed online · last frame 2 min ago"),
+  water: (id, t) => (id === "h1" ? t("Reservoir level 78%") : t("Flow 14 L/s")),
 };
 
 function span(points: [number, number][]) {
@@ -27,6 +29,7 @@ function span(points: [number, number][]) {
 }
 
 export default function TwinMapCanvas({ slug = COFFEE_SLUG }: { slug?: string }) {
+  const t = useT();
   const a = knownAssetBySlug(slug);
   const ref = knownAssetBySlug(COFFEE_SLUG);
   if (!a || !ref) return null;
@@ -48,16 +51,16 @@ export default function TwinMapCanvas({ slug = COFFEE_SLUG }: { slug?: string })
       zoomSnap={0.25}
       scrollWheelZoom={false}
       className="h-full w-full"
-      aria-label="Satellite map with sensor locations"
+      aria-label={t("Satellite map with sensor locations")}
     >
       <TileLayer url={SATELLITE_URL} attribution={SATELLITE_ATTRIBUTION} />
       <FitOnResize bounds={bounds} padding={36} />
       <Polygon positions={detail.boundary} pathOptions={{ color: "#FFFFFF", weight: 2.5, fillOpacity: 0.03 }} />
       {placed.map((s) => (
-        <Marker key={s.id} position={s.position} icon={dotIcon(sensorColors[s.kind], 24)} title={s.label}>
+        <Marker key={s.id} position={s.position} icon={dotIcon(sensorColors[s.kind], 24)} title={t(s.label)}>
           <Popup>
-            <p className="font-heading text-sm font-bold">{s.label}</p>
-            <p className="mt-1 text-xs text-ink-muted">{readings[s.kind](s.id)}</p>
+            <p className="font-heading text-sm font-bold">{t(s.label)}</p>
+            <p className="mt-1 text-xs text-ink-muted">{readings[s.kind](s.id, t)}</p>
           </Popup>
         </Marker>
       ))}

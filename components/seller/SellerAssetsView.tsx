@@ -11,12 +11,14 @@ import { useDemo } from "@/lib/demo/hooks";
 import { assetsOwnedBy, STATUS_LABEL } from "@/lib/demo/selectors";
 import type { AssetStatus } from "@/types/asset";
 import { AssetsTable } from "./AssetsTable";
+import { useT } from "@/lib/i18n/react";
 
 type Filter = "all" | AssetStatus;
 const FILTERS: Filter[] = ["all", "pending_review", "changes_requested", "published", "rejected"];
 
 export function SellerAssetsView() {
   const demo = useDemo();
+  const t = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const mine = assetsOwnedBy(demo, demo.session!.userId);
   const rows = filter === "all" ? mine : mine.filter((a) => a.status === filter);
@@ -29,7 +31,7 @@ export function SellerAssetsView() {
         actions={
           <Button asChild>
             <Link href="/seller/assets/new">
-              <PlusCircle className="h-4 w-4" aria-hidden="true" /> Create New Asset
+              <PlusCircle className="h-4 w-4" aria-hidden="true" /> {t("Create New Asset")}
             </Link>
           </Button>
         }
@@ -37,7 +39,7 @@ export function SellerAssetsView() {
       <FilterBar className="mb-4">
         {FILTERS.map((f) => (
           <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)}>
-            {f === "all" ? `All (${mine.length})` : `${STATUS_LABEL[f]} (${mine.filter((a) => a.status === f).length})`}
+            {f === "all" ? `${t("All")} (${mine.length})` : `${t(STATUS_LABEL[f])} (${mine.filter((a) => a.status === f).length})`}
           </FilterChip>
         ))}
       </FilterBar>
@@ -49,7 +51,7 @@ export function SellerAssetsView() {
           action={
             mine.length === 0 && (
               <Button asChild>
-                <Link href="/seller/assets/new">Create New Asset</Link>
+                <Link href="/seller/assets/new">{t("Create New Asset")}</Link>
               </Button>
             )
           }

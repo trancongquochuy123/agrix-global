@@ -18,6 +18,7 @@ import {
   type LegendItem,
 } from "./MapChrome";
 import { LocationInset } from "./LocationInset";
+import { useT } from "@/lib/i18n/react";
 
 const LAYERS = [
   { id: "boundary", label: "Property Boundary", color: "#FFFFFF", shape: "square" as const },
@@ -28,6 +29,7 @@ const LAYERS = [
 ];
 
 export default function AssetDetailMapCanvas({ detail, plantationLabel, locationLabel }: { detail: AssetDetail; plantationLabel: string; locationLabel: string }) {
+  const t = useT();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [street, setStreet] = useState(false);
   const [tiles, setTiles] = useState<"loading" | "ready">("loading");
@@ -62,7 +64,7 @@ export default function AssetDetailMapCanvas({ detail, plantationLabel, location
   const show = (id: string) => !hidden.has(id);
   const legend: LegendItem[] = LAYERS.map((l) => ({
     ...l,
-    label: l.id === "plantation" ? plantationLabel : l.id === "water" ? detail.waterLabel : l.label,
+    label: l.id === "plantation" ? plantationLabel : l.id === "water" ? t(detail.waterLabel) : t(l.label),
     checked: show(l.id),
   }));
   const center: [number, number] = [(bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2];
@@ -75,7 +77,7 @@ export default function AssetDetailMapCanvas({ detail, plantationLabel, location
       zoomSnap={0.25}
       scrollWheelZoom={false}
       className="h-full w-full"
-      aria-label={`Satellite map of ${detail.town}`}
+      aria-label={t("Satellite map of {place}", { place: t(detail.town) })}
     >
       {useStreet ? (
         <TileLayer key="street" url={STREET_URL} attribution={STREET_ATTRIBUTION} maxZoom={19} eventHandlers={tileHandlers} />
@@ -97,7 +99,7 @@ export default function AssetDetailMapCanvas({ detail, plantationLabel, location
             positions={p}
             pathOptions={{ color: "#8FC16B", weight: 1.5, fillColor: "#5F9F38", fillOpacity: 0.38 }}
           >
-            <Tooltip sticky>{plantationLabel} · Block {String.fromCharCode(65 + i)}</Tooltip>
+            <Tooltip sticky>{plantationLabel} · {t("Block {id}", { id: String.fromCharCode(65 + i) })}</Tooltip>
           </Polygon>
         ))}
       {show("water") && (
@@ -106,7 +108,7 @@ export default function AssetDetailMapCanvas({ detail, plantationLabel, location
           radius={detail.water.radiusM}
           pathOptions={{ color: "#9CC9F2", weight: 1.5, fillColor: "#4A90D9", fillOpacity: 0.7 }}
         >
-          <Tooltip sticky>{detail.waterLabel}</Tooltip>
+          <Tooltip sticky>{t(detail.waterLabel)}</Tooltip>
         </Circle>
       )}
       {show("roads") &&
@@ -115,14 +117,14 @@ export default function AssetDetailMapCanvas({ detail, plantationLabel, location
         ))}
       {show("boundary") && (
         <Polygon positions={detail.boundary} pathOptions={{ color: "#FFFFFF", weight: 3, fillOpacity: 0.02 }}>
-          <Tooltip sticky>Property boundary</Tooltip>
+          <Tooltip sticky>{t("Property boundary")}</Tooltip>
         </Polygon>
       )}
       {show("facilities") &&
         detail.facilities.map((f) => (
-          <Marker key={f.name} position={f.position} icon={dotIcon("#6B7A74", 20)} title={f.name}>
+          <Marker key={f.name} position={f.position} icon={dotIcon("#6B7A74", 20)} title={t(f.name)}>
             <Tooltip direction="top" offset={[0, -10]}>
-              {f.name}
+              {t(f.name)}
             </Tooltip>
           </Marker>
         ))}
@@ -147,13 +149,13 @@ export default function AssetDetailMapCanvas({ detail, plantationLabel, location
         {tiles === "loading" && (
           <div role="status" className="flex items-center gap-2 rounded-full bg-forest-950/85 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
             <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            {useStreet ? "Loading street map…" : "Loading satellite imagery…"}
+            {useStreet ? t("Loading street map…") : t("Loading satellite imagery…")}
           </div>
         )}
         {fellBack && (
           <div role="status" className="flex items-center gap-2 rounded-full bg-warning/95 px-3 py-1.5 text-xs font-semibold text-forest-950">
             <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
-            Satellite imagery unavailable — showing street map
+            {t("Satellite imagery unavailable — showing street map")}
           </div>
         )}
       </div>

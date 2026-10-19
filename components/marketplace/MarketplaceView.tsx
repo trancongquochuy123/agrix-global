@@ -18,6 +18,7 @@ import { ALL, categoryChips, categoryLabel, isCategory, type CategoryFilter } fr
 import type { Asset } from "@/types/asset";
 import { cn } from "@/lib/utils";
 import { AssetCard, AssetCardSkeleton } from "./AssetCard";
+import { useT } from "@/lib/i18n/react";
 
 const PAGE_SIZE = 6;
 const WISHLIST_KEY = "agrix:wishlist:v1";
@@ -41,6 +42,7 @@ function readParams(search: string, locationOptions: string[]) {
 
 export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discover agricultural opportunities." }: { basePath?: string; subtitle?: string }) {
   const demo = useDemo();
+  const t = useT();
   const assets = useMemo(() => publishedAssets(demo), [demo]);
   const locationOptions = useMemo(() => locationOptionsFor(assets), [assets]);
   const [query, setQuery] = useState("");
@@ -100,14 +102,14 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return assets.filter((a) => {
-      if (q && ![a.name, a.location, a.category, categoryLabel(a.category)].some((f) => f.toLowerCase().includes(q))) return false;
+      if (q && ![a.name, a.location, a.category, categoryLabel(a.category), t(a.name), t(a.location), t(categoryLabel(a.category))].some((f) => f.toLowerCase().includes(q))) return false;
       if (category !== ALL && a.category !== category) return false;
       if (location !== "All locations" && a.province !== location) return false;
       if (risk !== "Any risk" && a.risk !== risk) return false;
       if (minYield !== "any" && a.targetYield < Number(minYield)) return false;
       return true;
     });
-  }, [assets, query, category, location, risk, minYield]);
+  }, [assets, query, category, location, risk, minYield, t]);
 
   // Brief skeleton on filter changes to mimic a data fetch.
   useEffect(() => {
@@ -118,9 +120,9 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
       return;
     }
     setLoading(true);
-    const t = setTimeout(() => setLoading(false), 220);
+    const timer = setTimeout(() => setLoading(false), 220);
     return () => {
-      clearTimeout(t);
+      clearTimeout(timer);
       setLoading(false);
     };
   }, [ready, query, category, location, risk, minYield]);
@@ -145,10 +147,10 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
       const next = new Set(prev);
       if (next.has(asset.id)) {
         next.delete(asset.id);
-        toast("Removed from wishlist", { description: asset.name });
+        toast(t("Removed from wishlist"), { description: t(asset.name) });
       } else {
         next.add(asset.id);
-        toast.success("Added to wishlist", { description: asset.name });
+        toast.success(t("Added to wishlist"), { description: t(asset.name) });
       }
       return next;
     });
@@ -186,7 +188,7 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
   );
 
   const viewToggle = (
-    <div className="inline-flex rounded-lg border border-line bg-white p-0.5" role="group" aria-label="View mode">
+    <div className="inline-flex rounded-lg border border-line bg-white p-0.5" role="group" aria-label={t("View mode")}>
       {(
         [
           { id: "grid", label: "Grid", icon: LayoutGrid },
@@ -196,6 +198,7 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
         <button
           key={id}
           type="button"
+          aria-label={t(label)}
           aria-pressed={view === id}
           onClick={() => setView(id)}
           className={cn(
@@ -204,7 +207,7 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
           )}
         >
           <Icon className="h-4 w-4" aria-hidden="true" />
-          {label}
+          <span className="hidden sm:inline">{t(label)}</span>
         </button>
       ))}
     </div>
@@ -218,28 +221,28 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <label className="relative block flex-1 md:max-w-md">
-            <span className="sr-only">Search assets</span>
+            <span className="sr-only">{t("Search assets")}</span>
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search assets"
+              placeholder={t("Search assets")}
               className="field h-11 rounded-xl pl-10"
             />
           </label>
           <Button variant="outline" className="h-11 md:hidden" onClick={() => setFiltersOpen(true)}>
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            Filters{activeFilterCount > 0 && <span className="rounded-full bg-green-600 px-1.5 text-xs text-white">{activeFilterCount}</span>}
+            {t("Filters")}{activeFilterCount > 0 && <span className="rounded-full bg-green-600 px-1.5 text-xs text-white">{activeFilterCount}</span>}
           </Button>
           <div className="ml-auto">{viewToggle}</div>
         </div>
 
         <FilterBar>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0 md:pb-0" role="group" aria-label="Asset category">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0 md:pb-0" role="group" aria-label={t("Asset category")}>
             {categoryChips.map((c) => (
               <FilterChip key={c.id} active={category === c.id} onClick={() => setCategory(c.id)}>
-                {c.label}
+                {t(c.label)}
               </FilterChip>
             ))}
           </div>
@@ -252,11 +255,11 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
         </FilterBar>
         <div className="flex min-h-[28px] flex-wrap items-center gap-3 text-sm" aria-live="polite">
           <p className="text-ink-muted" data-testid="result-count">
-            <span className="font-semibold text-ink">{filtered.length}</span> {filtered.length === 1 ? "asset" : "assets"} found
+            <span className="font-semibold text-ink">{filtered.length}</span> {filtered.length === 1 ? t("asset found") : t("assets found")}
           </p>
           {anyFilter && (
             <button type="button" onClick={reset} className="font-semibold text-green-600 underline-offset-2 hover:underline">
-              Clear all filters
+              {t("Clear all filters")}
             </button>
           )}
         </div>
@@ -265,7 +268,7 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
       {/* Results */}
       <div className="mt-5">
         {loading ? (
-          <div role="status" aria-label="Loading assets" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div role="status" aria-label={t("Loading assets")} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
               <AssetCardSkeleton key={i} />
             ))}
@@ -276,8 +279,8 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
             description="Clear filters or explore all opportunities."
             action={
               <div className="flex flex-wrap justify-center gap-2">
-                <Button onClick={reset}>Clear filters</Button>
-                <Button variant="outline" onClick={reset}>Explore all opportunities</Button>
+                <Button onClick={reset}>{t("Clear filters")}</Button>
+                <Button variant="outline" onClick={reset}>{t("Explore all opportunities")}</Button>
               </div>
             }
           />
@@ -296,12 +299,12 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
 
       {/* Pagination */}
       {!loading && filtered.length > 0 && view === "grid" && totalPages > 1 && (
-        <nav aria-label="Pagination" className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label={t("Pagination")} className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-ink-muted" aria-live="polite">
-            Showing {from} – {to} of {filtered.length} assets
+            {t("Showing {from} – {to} of {total} assets", { from, to, total: filtered.length })}
           </p>
           <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="icon" aria-label="Previous page" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+            <Button variant="outline" size="icon" aria-label={t("Previous page")} disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -318,7 +321,7 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
                 {p}
               </button>
             ))}
-            <Button variant="outline" size="icon" aria-label="Next page" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
+            <Button variant="outline" size="icon" aria-label={t("Next page")} disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -328,8 +331,8 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
       {/* Mobile filter sheet */}
       <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
         <DialogContent variant="sheet" className="p-5">
-          <DialogTitle className="text-lg font-bold">Filters</DialogTitle>
-          <DialogDescription className="mt-1 text-sm text-ink-muted">Refine verified agricultural opportunities.</DialogDescription>
+          <DialogTitle className="text-lg font-bold">{t("Filters")}</DialogTitle>
+          <DialogDescription className="mt-1 text-sm text-ink-muted">{t("Refine verified agricultural opportunities.")}</DialogDescription>
           <div className="mt-5 space-y-3">
             {locationSelect}
             {riskSelect}
@@ -337,10 +340,10 @@ export function MarketplaceView({ basePath = "/marketplace", subtitle = "Discove
           </div>
           <div className="mt-6 flex gap-3">
             <Button variant="outline" className="flex-1" onClick={reset}>
-              Reset
+              {t("Reset")}
             </Button>
             <Button className="flex-1" onClick={() => setFiltersOpen(false)}>
-              Show {filtered.length} {filtered.length === 1 ? "asset" : "assets"}
+              {t(filtered.length === 1 ? "Show {n} asset" : "Show {n} assets", { n: filtered.length })}
             </Button>
           </div>
         </DialogContent>

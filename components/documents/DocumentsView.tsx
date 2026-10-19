@@ -12,6 +12,7 @@ import { fmtDate } from "@/lib/demo/format";
 import { useDemo } from "@/lib/demo/hooks";
 import type { AssetDocument } from "@/types/asset";
 import Link from "next/link";
+import { useT } from "@/lib/i18n/react";
 
 type Row = AssetDocument & { assetKey: string; assetName: string };
 
@@ -21,6 +22,7 @@ type Row = AssetDocument & { assetKey: string; assetName: string };
  */
 export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
   const demo = useDemo();
+  const t = useT();
   const me = demo.session!;
   const [query, setQuery] = useState("");
   const [asset, setAsset] = useState("all");
@@ -53,8 +55,8 @@ export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
   const assetOptions = useMemo(() => {
     const seen = new Map<string, string>();
     all.forEach((r) => seen.set(r.assetKey, r.assetName));
-    return [...seen.entries()].map(([value, label]) => ({ value, label }));
-  }, [all]);
+    return [...seen.entries()].map(([value, label]) => ({ value, label: t(label) }));
+  }, [all, t]);
   const docCategories = useMemo(() => Array.from(new Set(all.map((d) => d.category))), [all]);
 
   const rows = useMemo(() => {
@@ -63,9 +65,9 @@ export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
       (d) =>
         (asset === "all" || d.assetKey === asset) &&
         (category === "all" || d.category === category) &&
-        (!q || d.name.toLowerCase().includes(q) || d.assetName.toLowerCase().includes(q)),
+        (!q || [d.name, d.assetName, t(d.name), t(d.assetName)].some((f) => f.toLowerCase().includes(q))),
     );
-  }, [all, query, asset, category]);
+  }, [all, query, asset, category, t]);
 
   const reset = () => {
     setQuery("");
@@ -83,7 +85,7 @@ export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
           description={scope === "seller" ? "Documents you upload while creating an asset will appear here." : "Open listings and your investment confirmations will appear here."}
           action={
             <Button asChild>
-              <Link href={scope === "seller" ? "/seller/assets/new" : "/investor/marketplace"}>{scope === "seller" ? "Create New Asset" : "Explore opportunities"}</Link>
+              <Link href={scope === "seller" ? "/seller/assets/new" : "/investor/marketplace"}>{scope === "seller" ? t("Create New Asset") : t("Explore opportunities")}</Link>
             </Button>
           }
         />
@@ -91,9 +93,9 @@ export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
         <>
           <div className="flex flex-wrap items-center gap-2">
             <label className="relative block w-full min-w-0 flex-1 sm:min-w-[220px] md:max-w-sm">
-              <span className="sr-only">Search documents</span>
+              <span className="sr-only">{t("Search documents")}</span>
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
-              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search documents" className="field h-11 rounded-xl pl-10" />
+              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search documents")} className="field h-11 rounded-xl pl-10" />
             </label>
             <FilterSelect label="Filter by asset" value={asset} onChange={setAsset} options={[{ value: "all", label: "All assets" }, ...assetOptions]} className="w-full sm:w-56" />
             <FilterSelect
@@ -106,17 +108,17 @@ export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
           </div>
 
           <p className="mt-4 text-sm text-ink-muted" aria-live="polite">
-            <span className="font-semibold text-ink">{rows.length}</span> {rows.length === 1 ? "document" : "documents"}
+            <span className="font-semibold text-ink">{rows.length}</span> {rows.length === 1 ? t("document") : t("documents")}
             {rows.length !== all.length && (
               <button type="button" onClick={reset} className="ml-3 font-semibold text-green-600 hover:underline">
-                Clear all filters
+                {t("Clear all filters")}
               </button>
             )}
           </p>
 
           <div className="mt-3">
             {rows.length === 0 ? (
-              <EmptyState title="No documents match your filters" description="Clear filters to see every document." action={<Button onClick={reset}>Clear filters</Button>} />
+              <EmptyState title="No documents match your filters" description="Clear filters to see every document." action={<Button onClick={reset}>{t("Clear filters")}</Button>} />
             ) : (
               <div className="grid min-w-0 gap-2.5 lg:grid-cols-2">
                 {rows.map((d) => (
@@ -127,7 +129,7 @@ export function DocumentsView({ scope }: { scope: "investor" | "seller" }) {
           </div>
         </>
       )}
-      <p className="mt-6 text-xs text-ink-muted">Sample documents. Downloads are simulated.</p>
+      <p className="mt-6 text-xs text-ink-muted">{t("Sample documents. Downloads are simulated.")}</p>
     </div>
   );
 }

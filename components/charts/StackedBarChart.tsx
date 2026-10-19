@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { axisProps, CHART, ChartTooltip } from "./ChartPrimitives";
+import { useT } from "@/lib/i18n/react";
 
 export interface BarSeries {
   key: string;
@@ -26,12 +27,13 @@ export function StackedBarChart({
   ariaLabel: string;
   yTicks?: number[];
 }) {
+  const t = useT();
   return (
-    <div role="img" aria-label={ariaLabel} className="h-full min-h-[200px] w-full">
+    <div role="img" aria-label={t(ariaLabel)} className="h-full min-h-[200px] w-full">
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="24%">
           <CartesianGrid stroke={CHART.grid} strokeDasharray="3 4" vertical={false} />
-          <XAxis dataKey={xKey} {...axisProps} />
+          <XAxis dataKey={xKey} {...axisProps} tickFormatter={(v) => t(String(v))} />
           <YAxis {...axisProps} width={44} tickFormatter={yFormat} ticks={yTicks} />
           <Tooltip cursor={{ fill: "rgba(14,81,61,0.06)" }} content={<ChartTooltip format={tooltipFormat} />} />
           {series.map((s, i) => (

@@ -18,11 +18,13 @@ import { DemoAnalysisChip } from "@/components/ai/AiInsights";
 import { formatNumber, formatUsd } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { productionLabels } from "./labels";
+import { useT } from "@/lib/i18n/react";
 
 const driverIcons = { mountain: Mountain, sprout: Sprout, globe: Globe, leaf: Leaf, droplets: Droplets, shield: ShieldCheck, sun: Sun, wheat: Wheat, zap: Zap, trees: Trees, scale: Scale } as const;
 const sustainIcons = { sprout: Sprout, co2: Cloud, trees: TreePine, water: Droplets, sun: Sun, zap: Zap, wheat: Wheat, shield: ShieldCheck } as const;
 
 export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDetail; asset: Asset; onViewAllDocs: () => void }) {
+  const t = useT();
   const [years, setYears] = useState("10");
   const labels = productionLabels[asset.category];
   const data = detail.production.slice(0, Number(years));
@@ -51,7 +53,7 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
       >
         <div className="min-h-0 flex-1">
           <StackedBarChart
-            ariaLabel={`Ten-year production forecast: ${labels.a} and ${labels.b}`}
+            ariaLabel={t("Ten-year production forecast: {a} and {b}", { a: t(labels.a), b: t(labels.b) })}
             data={data}
             xKey="year"
             series={[
@@ -73,8 +75,8 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
               <li key={d.id} className="flex items-center gap-3 rounded-xl bg-green-50/60 px-3 py-2.5">
                 <Icon className="h-5 w-5 shrink-0 text-forest-700" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold leading-tight">{d.label}</p>
-                  <p className="text-xs text-ink-muted">{d.description}</p>
+                  <p className="text-sm font-semibold leading-tight">{t(d.label)}</p>
+                  <p className="text-xs text-ink-muted">{t(d.description)}</p>
                 </div>
                 <span className="figure rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">+{d.impactPct}%</span>
               </li>
@@ -87,7 +89,7 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
         <ChartCard
           title="Ownership Verification"
           icon={<FileCheck2 className="h-5 w-5" />}
-          action={<span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Simulated review</span>}
+          action={<span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">{t("Simulated review")}</span>}
         >
           <ol className="space-y-3">
             {detail.verification.map((v, i) => (
@@ -99,8 +101,8 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
                   <Check className="h-3.5 w-3.5" />
                 </span>
                 <div className="leading-tight">
-                  <p className="text-sm font-semibold">{v.label}</p>
-                  <p className="text-xs text-ink-muted">{v.date}</p>
+                  <p className="text-sm font-semibold">{t(v.label)}</p>
+                  <p className="text-xs text-ink-muted">{t(v.date)}</p>
                 </div>
               </li>
             ))}
@@ -118,8 +120,8 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div className="leading-tight">
-                  <p className="figure text-xl font-bold">{m.value}</p>
-                  <p className="mt-0.5 text-xs text-ink-muted">{m.label}</p>
+                  <p className="figure text-xl font-bold">{t(m.value)}</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">{t(m.label)}</p>
                 </div>
               </div>
             );
@@ -133,7 +135,7 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
         icon={<FileCheck2 className="h-5 w-5" />}
         action={
           <button type="button" onClick={onViewAllDocs} className="text-xs font-semibold text-green-600 hover:underline">
-            View all ({detail.documents.length}) →
+            {t("View all ({n}) →", { n: detail.documents.length })}
           </button>
         }
       >
@@ -148,14 +150,15 @@ export function OverviewTab({ detail, asset, onViewAllDocs }: { detail: AssetDet
 }
 
 export function ValuationTab({ detail }: { detail: AssetDetail }) {
+  const t = useT();
   const { low, base, high } = detail.valuationRange;
   const scale = base / (valuationModule.base * 1e6);
   const series = valuationModule.series.map((p) => ({ month: p.month, value: Number((p.value * scale).toFixed(2)) }));
   const pos = ((base - low) / (high - low)) * 100;
 
   const cols: Column<AssetDetail["comparables"][number]>[] = [
-    { key: "name", header: "Comparable", render: (r) => <span className="font-semibold">{r.name}</span> },
-    { key: "loc", header: "Location", render: (r) => <span className="text-ink-muted">{r.location}</span> },
+    { key: "name", header: "Comparable", render: (r) => <span className="font-semibold">{t(r.name)}</span> },
+    { key: "loc", header: "Location", render: (r) => <span className="text-ink-muted">{t(r.location)}</span> },
     { key: "vph", header: "Value / ha", align: "right", sortValue: (r) => r.valuePerHa, render: (r) => <span className="figure">{formatUsd(r.valuePerHa, { compact: false })}</span> },
     { key: "yield", header: "Yield", align: "right", sortValue: (r) => r.yieldPct, render: (r) => <span className="figure">{r.yieldPct}%</span> },
   ];
@@ -164,21 +167,21 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
     <div className="grid gap-5 lg:grid-cols-2">
       <ChartCard title="AI Valuation Range" subtitle="Simulated model output from predefined data" action={<DemoAnalysisChip />}>
         <p className="figure text-4xl font-extrabold">{formatUsd(base, { decimals: 2 })}</p>
-        <p className="mt-1 text-sm text-ink-muted">Base-case fair value</p>
+        <p className="mt-1 text-sm text-ink-muted">{t("Base-case fair value")}</p>
         <div className="mt-6">
           <div className="relative h-2 rounded-full bg-green-100">
             <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-gradient-to-r from-sage/40 to-green-600/70" style={{ background: "linear-gradient(90deg,#BFD9A8,#2F7D3B)" }} />
             <span className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-forest-800 shadow-card" style={{ left: `${pos}%` }} aria-hidden="true" />
           </div>
           <div className="figure mt-2 flex justify-between text-xs text-ink-muted">
-            <span>Low {formatUsd(low, { decimals: 2 })}</span>
-            <span>High {formatUsd(high, { decimals: 2 })}</span>
+            <span>{t("Low {amount}", { amount: formatUsd(low, { decimals: 2 }) })}</span>
+            <span>{t("High {amount}", { amount: formatUsd(high, { decimals: 2 }) })}</span>
           </div>
         </div>
         <ul className="mt-6 space-y-2.5 text-sm">
           {detail.valuationFactors.map((f) => (
             <li key={f.label} className="flex items-center justify-between border-b border-line pb-2 last:border-0">
-              <span className="text-ink-muted">{f.label}</span>
+              <span className="text-ink-muted">{t(f.label)}</span>
               <span className={cn("figure font-semibold", f.impact.startsWith("-") ? "text-danger" : "text-green-700")}>{f.impact}</span>
             </li>
           ))}
@@ -188,7 +191,7 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
       <div className="flex flex-col gap-5">
         <ChartCard title="Valuation trend" subtitle="Fair value, $ millions · last 7 months" action={<DemoAnalysisChip />} bodyClassName="h-52">
           <TrendChart
-            ariaLabel="Seven-month valuation trend"
+            ariaLabel={t("Seven-month valuation trend")}
             data={series}
             xKey="month"
             series={[{ key: "value", name: "Fair value", color: "#2F7D3B", area: true }]}
@@ -206,6 +209,7 @@ export function ValuationTab({ detail }: { detail: AssetDetail }) {
 }
 
 export function RiskTab({ detail }: { detail: AssetDetail }) {
+  const t = useT();
   const level = detail.riskScore < 33 ? "Low" : detail.riskScore < 60 ? "Medium" : "High";
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -217,7 +221,7 @@ export function RiskTab({ detail }: { detail: AssetDetail }) {
           </p>
           <RiskBadge level={level} className="mt-3" />
           <p className="mt-4 text-center text-sm text-ink-muted">
-            Weighted across climate, market, operations, legal and biological factors. Simulated from predefined demo data.
+            {t("Weighted across climate, market, operations, legal and biological factors. Simulated from predefined demo data.")}
           </p>
         </div>
       </ChartCard>
@@ -226,14 +230,14 @@ export function RiskTab({ detail }: { detail: AssetDetail }) {
           {detail.riskFactors.map((r) => (
             <li key={r.id} className="py-3.5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold">{r.label}</p>
+                <p className="text-sm font-semibold">{t(r.label)}</p>
                 <div className="flex items-center gap-3">
                   <span className="figure text-sm font-semibold">{r.score}</span>
                   <RiskBadge level={r.level} />
                 </div>
               </div>
-              <ProgressBar value={r.score} label={`${r.label} risk score`} tone={r.level === "Low" ? "green" : "warning"} className="mt-2" />
-              <p className="mt-2 text-xs text-ink-muted">{r.note}</p>
+              <ProgressBar value={r.score} label={t("{label} risk score", { label: t(r.label) })} tone={r.level === "Low" ? "green" : "warning"} className="mt-2" />
+              <p className="mt-2 text-xs text-ink-muted">{t(r.note)}</p>
             </li>
           ))}
         </ul>
@@ -243,13 +247,14 @@ export function RiskTab({ detail }: { detail: AssetDetail }) {
 }
 
 export function DocumentsTab({ documents }: { documents: AssetDocument[] }) {
+  const t = useT();
   const [category, setCategory] = useState("all");
   const categories = useMemo(() => ["all", ...Array.from(new Set(documents.map((d) => d.category)))], [documents]);
   const docs = category === "all" ? documents : documents.filter((d) => d.category === category);
   return (
     <ChartCard
       title="Data room"
-      subtitle={`${docs.length} of ${documents.length} documents`}
+      subtitle={t("{n} of {total} documents", { n: docs.length, total: documents.length })}
       action={
         <FilterSelect
           label="Document category"
@@ -277,20 +282,21 @@ const activityDot = {
 } as const;
 
 export function ActivityTab({ detail }: { detail: AssetDetail }) {
+  const t = useT();
   return (
     <ChartCard title="Recent activity">
       <ol className="relative space-y-6 pl-6 before:absolute before:bottom-1 before:left-[7px] before:top-1 before:w-px before:bg-line">
         {detail.activity.map((a) => (
           <li key={a.id} className="relative">
             <span className={cn("absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 border-white", activityDot[a.kind])} aria-hidden="true" />
-            <p className="text-sm font-semibold">{a.title}</p>
-            <p className="mt-0.5 text-sm text-ink-muted">{a.detail}</p>
-            <p className="mt-1 text-xs text-ink-muted/80">{a.date}</p>
+            <p className="text-sm font-semibold">{t(a.title)}</p>
+            <p className="mt-0.5 text-sm text-ink-muted">{t(a.detail)}</p>
+            <p className="mt-1 text-xs text-ink-muted/80">{t(a.date)}</p>
           </li>
         ))}
       </ol>
       <p className="mt-6 flex items-center gap-2 text-xs text-ink-muted">
-        <Wind className="h-3.5 w-3.5" aria-hidden="true" /> Activity is simulated for this prototype.
+        <Wind className="h-3.5 w-3.5" aria-hidden="true" /> {t("Activity is simulated for this prototype.")}
       </p>
     </ChartCard>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bean, Coffee, Palmtree, Sprout, Trees, Wheat, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const placeholderIcons: Record<string, LucideIcon> = {
   coffee: Coffee,
@@ -24,6 +25,7 @@ interface SafeImageProps {
 
 /** Image with graceful degradation: remote photo → designed CSS placeholder. */
 export function SafeImage({ src, alt, category = "coffee", className, imgClassName }: SafeImageProps) {
+  const t = useT();
   const [failed, setFailed] = useState(!src);
   const [loaded, setLoaded] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
@@ -54,7 +56,7 @@ export function SafeImage({ src, alt, category = "coffee", className, imgClassNa
         <img
           ref={ref}
           src={src}
-          alt={alt}
+          alt={t(alt)}
           loading="lazy"
           decoding="async"
           onError={() => setFailed(true)}
@@ -66,7 +68,7 @@ export function SafeImage({ src, alt, category = "coffee", className, imgClassNa
           )}
         />
       )}
-      {failed && <span className="sr-only">{alt}</span>}
+      {failed && <span className="sr-only">{t(alt)}</span>}
     </div>
   );
 }

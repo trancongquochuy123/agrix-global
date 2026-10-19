@@ -7,6 +7,8 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/shared/Logo";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
+import { useT } from "@/lib/i18n/react";
 import { useHydrated, useSession } from "@/lib/demo/hooks";
 import { homeOf } from "@/lib/demo/routes";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const session = useSession();
   const signedIn = hydrated && !!session;
   const isAuth = pathname.startsWith("/auth");
+  const t = useT();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -29,14 +32,14 @@ export function PublicShell({ children }: { children: ReactNode }) {
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-pop"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
       <header className="sticky top-0 z-30 border-b border-line bg-white">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 sm:px-6 xl:px-8">
-          <Link href="/" aria-label="AGRIX home" className="flex shrink-0 items-center">
+          <Link href="/" aria-label={t("AGRIX home")} className="flex shrink-0 items-center">
             <Logo tone="dark" />
           </Link>
-          <nav aria-label="Public" className="ml-4 hidden items-center gap-1 md:flex">
+          <nav aria-label={t("Public")} className="ml-4 hidden items-center gap-1 md:flex">
             {links.map((l) => {
               const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
               return (
@@ -46,7 +49,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   aria-current={active ? "page" : undefined}
                   className={cn("rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-green-50", active ? "text-green-700" : "text-ink")}
                 >
-                  {l.label}
+                  {t(l.label)}
                 </Link>
               );
             })}
@@ -54,33 +57,34 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             {signedIn ? (
               <Button asChild size="sm">
-                <Link href={homeOf(session!.role)}>Go to dashboard</Link>
+                <Link href={homeOf(session!.role)}>{t("Go to dashboard")}</Link>
               </Button>
             ) : (
               <>
                 <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
-                  <Link href="/auth/login">Log in</Link>
+                  <Link href="/auth/login">{t("Log in")}</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link href="/auth/register">Get started</Link>
+                  <Link href="/auth/register">{t("Get started")}</Link>
                 </Button>
               </>
             )}
+            <LanguageToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button type="button" aria-label="Open menu" className="rounded-lg p-2 text-ink transition-colors hover:bg-green-50 md:hidden">
+                <button type="button" aria-label={t("Open menu")} className="rounded-lg p-2 text-ink transition-colors hover:bg-green-50 md:hidden">
                   <Menu className="h-5 w-5" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48">
                 {links.map((l) => (
                   <DropdownMenuItem key={l.href} asChild>
-                    <Link href={l.href}>{l.label}</Link>
+                    <Link href={l.href}>{t(l.label)}</Link>
                   </DropdownMenuItem>
                 ))}
                 {!signedIn && (
                   <DropdownMenuItem asChild>
-                    <Link href="/auth/login">Log in</Link>
+                    <Link href="/auth/login">{t("Log in")}</Link>
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -94,8 +98,8 @@ export function PublicShell({ children }: { children: ReactNode }) {
       {!isAuth && (
         <footer className="border-t border-line">
           <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-6 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:px-8">
-            <p>© 2026 AGRIX. Real Assets. Real Intelligence. Global Capital.</p>
-            <p className="max-w-md text-xs sm:text-right">Product prototype: listings, returns, AI scores and transactions are simulated and not an offer to invest.</p>
+            <p>{t("© 2026 AGRIX. Real Assets. Real Intelligence. Global Capital.")}</p>
+            <p className="max-w-md text-xs sm:text-right">{t("Product prototype: listings, returns, AI scores and transactions are simulated and not an offer to invest.")}</p>
           </div>
         </footer>
       )}

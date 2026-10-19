@@ -18,3 +18,4 @@ Thumbs.db
 # update bundles
 *.tgz
 _to_delete/
+.unit-build

@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 export interface Column<T> {
   key: string;
@@ -37,6 +38,7 @@ export function DataTable<T>({
   minWidth = "min-w-[720px]",
   initialSort,
 }: DataTableProps<T>) {
+  const t = useT();
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(initialSort ?? null);
 
   const sorted = useMemo(() => {
@@ -58,7 +60,7 @@ export function DataTable<T>({
   return (
     <>
       {mobileCard && (
-        <ul className="space-y-3 md:hidden" aria-label={caption}>
+        <ul className="space-y-3 md:hidden" aria-label={t(caption)}>
           {sorted.map((row) => (
             <li key={rowKey(row)}>
               {onRowClick ? (
@@ -79,7 +81,7 @@ export function DataTable<T>({
       )}
       <div className={cn("overflow-x-auto", mobileCard && "hidden md:block")}>
         <table className={`w-full ${minWidth} border-collapse text-sm`}>
-          <caption className="sr-only">{caption}</caption>
+          <caption className="sr-only">{t(caption)}</caption>
           <thead>
             <tr className="bg-green-50/60 text-xs font-semibold text-ink-muted">
               {columns.map((col) => {
@@ -101,11 +103,11 @@ export function DataTable<T>({
                           active && "text-ink",
                         )}
                       >
-                        {col.header}
+                        {t(col.header)}
                         <Icon className="h-3 w-3" aria-hidden="true" />
                       </button>
                     ) : (
-                      col.header
+                      t(col.header)
                     )}
                   </th>
                 );

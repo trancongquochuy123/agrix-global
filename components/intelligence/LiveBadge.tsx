@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/react";
 
 const REFRESH_MS = 25_000;
 
 /** Simulated "live data" pill: counts up in minutes and refreshes periodically. */
 export function LiveBadge({ onRefresh }: { onRefresh: () => void }) {
   const lastUpdate = useRef<number>(0);
-  const [label, setLabel] = useState("Updated 8 min ago");
+  const t = useT();
+  const [mins, setMins] = useState(8);
 
   useEffect(() => {
     lastUpdate.current = Date.now() - 8 * 60_000;
     const format = () => {
-      const mins = Math.floor((Date.now() - lastUpdate.current) / 60_000);
-      setLabel(mins < 1 ? "Updated just now" : `Updated ${mins} min ago`);
+      setMins(Math.floor((Date.now() - lastUpdate.current) / 60_000));
     };
     const tick = setInterval(format, 5_000);
     const refresh = setInterval(() => {
@@ -33,7 +34,7 @@ export function LiveBadge({ onRefresh }: { onRefresh: () => void }) {
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60" />
         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-600" />
       </span>
-      Live data · {label}
+      {t("Live data")} · {mins < 1 ? t("Updated just now") : t("Updated {n} min ago", { n: mins })}
     </div>
   );
 }

@@ -1,6 +1,9 @@
+"use client";
+
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import type { RiskLevel } from "@/types/asset";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const riskStyles: Record<string, string> = {
   Low: "bg-green-50 text-green-700 ring-green-100",
@@ -10,6 +13,7 @@ const riskStyles: Record<string, string> = {
 };
 
 export function RiskBadge({ level, className }: { level: RiskLevel | "Moderate"; className?: string }) {
+  const t = useT();
   return (
     <span
       className={cn(
@@ -18,7 +22,7 @@ export function RiskBadge({ level, className }: { level: RiskLevel | "Moderate";
         className,
       )}
     >
-      {level}
+      {t(level)}
     </span>
   );
 }
@@ -34,6 +38,7 @@ const statusStyles: Record<string, { cls: string; dot: string }> = {
 };
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  const t = useT();
   const s = statusStyles[status] ?? statusStyles.Pending;
   const pill = s.cls.includes("ring-1");
   return (
@@ -46,7 +51,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
       )}
     >
       {!pill && <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} aria-hidden="true" />}
-      {status}
+      {t(status)}
     </span>
   );
 }
@@ -60,6 +65,7 @@ export function VerifiedBadge({
   variant?: "inline" | "overlay";
   className?: string;
 }) {
+  const t = useT();
   const Icon = variant === "overlay" ? CheckCircle2 : ShieldCheck;
   return (
     <span
@@ -72,7 +78,7 @@ export function VerifiedBadge({
       )}
     >
       <Icon className={cn("h-3.5 w-3.5", variant === "overlay" ? "text-lime-indicator" : "text-green-600")} aria-hidden="true" />
-      {label}
+      {t(label)}
     </span>
   );
 }
@@ -93,9 +99,10 @@ const listingLabel: Record<string, string> = {
 
 /** Lifecycle status of a seller listing. */
 export function ListingStatusBadge({ status, className }: { status: string; className?: string }) {
+  const t = useT();
   return (
     <span className={cn("inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset", listingStyles[status] ?? listingStyles.pending_review, className)}>
-      {listingLabel[status] ?? status}
+      {t(listingLabel[status] ?? status)}
     </span>
   );
 }

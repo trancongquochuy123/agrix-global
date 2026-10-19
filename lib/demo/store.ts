@@ -1,9 +1,13 @@
-import type { Asset, AssetCategory, UploadedDocMeta } from "@/types/asset";
+import type { Asset, AssetCategory, ReviewEvent, UploadedDocMeta } from "@/types/asset";
+import { MAX_AREA_HA, MAX_RETURN_PCT, MAX_TERM_MONTHS, MIN_RETURN_PCT, MIN_TERM_MONTHS } from "@/lib/numeric";
 import { pctFunded } from "@/data/assets";
+import { IMAGES } from "@/data/images";
 import { BASELINE, buildState, sessionFor } from "./seed";
+import { ledgerTotalFor } from "./selectors";
 import type { ActivityEntry, DemoState, Notice, Role, ScenarioId, Session, Transaction } from "./types";
 
 const KEY = "agrix:demo:v1";
+const LEGACY_COVER = /^\/images\/assets\/[a-z]+\.svg$/;
 
 let state: DemoState = BASELINE;
 let loaded = false;
@@ -14,12 +18,34 @@ function isValid(x: unknown): x is DemoState {
   return !!s && s.v === 1 && Array.isArray(s.assets) && Array.isArray(s.transactions) && Array.isArray(s.users) && Array.isArray(s.notices) && Array.isArray(s.activity);
 }
 
+/**
+ * Brings older persisted data in line with the current rules: a session of a suspended user is dropped, and the
+ * seeded opening-balance ledger entries added after v1 shipped are restored when (and only when) they close an
+ * exact gap between an asset's raised amount and its ledger.
+ */
+export function normalizeState(s: DemoState): DemoState {
+  let next = s;
+  if (isSuspended(s, s.session?.userId)) next = { ...next, session: null };
+  // Covers used to be bundled illustrations (/images/assets/*.svg); persisted data is moved to the real photos.
+  if (next.assets.some((a) => LEGACY_COVER.test(a.image))) {
+    next = { ...next, assets: next.assets.map((a) => (LEGACY_COVER.test(a.image) ? { ...a, image: IMAGES[a.category] } : a)) };
+  }
+  const missing = BASELINE.transactions.filter(
+    (t) =>
+      t.kind === "opening" &&
+      !next.transactions.some((x) => x.id === t.id) &&
+      next.assets.some((a) => a.id === t.assetId && a.status === "published" && a.raisedUsd - ledgerTotalFor(next, a.id) === t.amountUsd),
+  );
+  if (missing.length) next = { ...next, transactions: [...next.transactions, ...missing] };
+  return next;
+}
+
 function readStorage(): DemoState | null {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return isValid(parsed) ? parsed : null;
+    return isValid(parsed) ? normalizeState(parsed) : null;
   } catch {
     return null;
   }
@@ -29,7 +55,16 @@ function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
   const stored = readStorage();
-  if (stored) state = stored;
+  if (stored) {
+    state = stored;
+    // Persist repairs (e.g. a dropped suspended session) so other tabs and later loads see the corrected state.
+    try {
+      const raw = window.localStorage.getItem(KEY);
+      if (raw && raw !== JSON.stringify(stored) && JSON.stringify(JSON.parse(raw)) !== JSON.stringify(stored)) window.localStorage.setItem(KEY, JSON.stringify(stored));
+    } catch {
+      /* ignore */
+    }
+  }
   window.addEventListener("storage", (e) => {
     if (e.key !== KEY) return;
     const next = readStorage();
@@ -78,18 +113,27 @@ const notice = (to: Role, title: string, body: string, href?: string): Notice =>
 
 /* --------------------------------- Session --------------------------------- */
 
-export function signInAs(role: Role) {
-  commit({ ...state, session: sessionFor(role) });
-}
-
 export type AuthResult = { ok: true; role: Role } | { ok: false; error: string };
+
+export const SUSPENDED_MESSAGE = "This demo account is suspended by an admin.";
+
+/** True when the user exists and an admin has suspended it. */
+export const isSuspended = (s: DemoState, userId: string | undefined) => !!userId && s.users.some((u) => u.id === userId && u.status === "Suspended");
+
+/** Switches to the canonical demo account of a role; refuses when that account is suspended. */
+export function signInAs(role: Role): AuthResult {
+  const session = sessionFor(role);
+  if (isSuspended(state, session.userId)) return { ok: false, error: SUSPENDED_MESSAGE };
+  commit({ ...state, session });
+  return { ok: true, role };
+}
 
 /** Demo sign-in: passwords are never checked; the email must belong to a demo or registered account. */
 export function signInWithEmail(email: string): AuthResult {
   const e = email.trim().toLowerCase();
   const user = state.users.find((u) => u.email.toLowerCase() === e);
   if (!user) return { ok: false, error: "No demo account uses this email. Pick one of the demo accounts below." };
-  if (user.status === "Suspended") return { ok: false, error: "This demo account is suspended by an admin." };
+  if (user.status === "Suspended") return { ok: false, error: SUSPENDED_MESSAGE };
   const session: Session = { userId: user.id, role: user.role, name: user.name, email: user.email };
   commit({ ...state, session });
   return { ok: true, role: user.role };
@@ -184,7 +228,7 @@ export function submitAsset(input: SubmitAssetInput): Asset {
     termMonths: input.termMonths,
     minInvestmentUsd: 1_000,
     investors: 0,
-    image: `/images/assets/${input.category}.svg`,
+    image: IMAGES[input.category],
     imageFallback: input.category,
     coords: input.coords,
     description: input.description,
@@ -230,25 +274,151 @@ export function reviewAsset(assetId: string, decision: ReviewDecision, note: str
     notice("seller", sellerTitle, reviewNote, `/seller/assets/${asset.id}`),
     ...(decision === "approve" ? [notice("investor", `New opportunity: ${asset.name}`, `${asset.termMonths}-month financing, illustrative ${asset.targetYield}% annualised return.`, `/investor/marketplace/${asset.slug}`)] : []),
   ];
+  const event: ReviewEvent = {
+    id: uid("rev"),
+    at: nowIso(),
+    actor: state.session?.name ?? "Admin Operator",
+    kind: decision === "approve" ? "approved" : decision === "reject" ? "rejected" : "changes_requested",
+    note: reviewNote,
+  };
   commit({
     ...state,
-    assets: state.assets.map((a) => (a.id === assetId ? { ...a, status, reviewedAt: nowIso(), reviewNote } : a)),
+    assets: state.assets.map((a) => (a.id === assetId ? { ...a, status, reviewedAt: event.at, reviewNote, reviewHistory: [...(a.reviewHistory ?? []), event] } : a)),
     notices: [...next, ...state.notices],
     activity: pushActivity(state, state.session?.name ?? "Admin Operator", verb, asset.name),
   });
   return { ok: true };
 }
 
-export function resubmitAsset(assetId: string): { ok: boolean; error?: string } {
+/** Seller-editable fields of a listing that an admin sent back for changes. */
+export interface AssetEditPatch {
+  name: string;
+  description: string;
+  assetValueUsd: number;
+  targetUsd: number;
+  termMonths: number;
+  returnPct: number;
+  areaHa: number;
+  uploads: UploadedDocMeta[];
+}
+
+export type AssetEditResult = { ok: true; changedFields: string[] } | { ok: false; error: string; field?: keyof AssetEditPatch };
+
+const isWhole = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n);
+
+/** Server-side style validation of an edit; the form validates the same rules before calling. */
+export function validateAssetEdit(p: AssetEditPatch): { error: string; field: keyof AssetEditPatch } | null {
+  if (typeof p.name !== "string" || p.name.trim().length < 3) return { field: "name", error: "Enter an asset name (at least 3 characters)." };
+  if (typeof p.description !== "string" || p.description.trim().length < 20) return { field: "description", error: "Describe the financing purpose (at least 20 characters)." };
+  if (!isWhole(p.assetValueUsd) || p.assetValueUsd <= 0) return { field: "assetValueUsd", error: "Enter an asset value in whole dollars, greater than 0." };
+  if (!isWhole(p.targetUsd) || p.targetUsd <= 0) return { field: "targetUsd", error: "Enter a financing target in whole dollars, greater than 0." };
+  if (p.targetUsd > p.assetValueUsd) return { field: "targetUsd", error: "The target cannot exceed the asset value." };
+  if (!isWhole(p.termMonths) || p.termMonths < MIN_TERM_MONTHS || p.termMonths > MAX_TERM_MONTHS) return { field: "termMonths", error: `Enter a whole number of months between ${MIN_TERM_MONTHS} and ${MAX_TERM_MONTHS}.` };
+  if (!Number.isFinite(p.returnPct) || p.returnPct < MIN_RETURN_PCT || p.returnPct > MAX_RETURN_PCT) return { field: "returnPct", error: `Enter an illustrative return between ${MIN_RETURN_PCT}% and ${MAX_RETURN_PCT}%.` };
+  if (!Number.isFinite(p.areaHa) || p.areaHa <= 0 || p.areaHa > MAX_AREA_HA) return { field: "areaHa", error: `Enter an area between 0 and ${MAX_AREA_HA.toLocaleString("en-US")} ha.` };
+  if (!Array.isArray(p.uploads) || p.uploads.length === 0) return { field: "uploads", error: "Attach at least one supporting document (the land certificate)." };
+  return null;
+}
+
+const sameDocs = (a: UploadedDocMeta[], b: UploadedDocMeta[]) => a.length === b.length && a.every((d, i) => d.name === b[i].name && d.sizeKb === b[i].sizeKb);
+
+function changedFieldsOf(a: Asset, p: AssetEditPatch): string[] {
+  const out: string[] = [];
+  if (a.name !== p.name.trim()) out.push("Asset name");
+  if (a.description !== p.description.trim()) out.push("Purpose of financing");
+  if (a.assetValueUsd !== p.assetValueUsd) out.push("Asset value");
+  if (a.targetUsd !== p.targetUsd) out.push("Financing target");
+  if (a.termMonths !== p.termMonths) out.push("Financing term");
+  if (a.targetYield !== p.returnPct) out.push("Illustrative return");
+  if (a.areaHa !== p.areaHa) out.push("Area");
+  if (!sameDocs(a.uploads, p.uploads)) out.push("Documents");
+  return out;
+}
+
+/** Only the owning seller may edit, and only while the asset is in `changes_requested`. */
+function editableAsset(assetId: string): { asset: Asset } | { error: string } {
   const asset = state.assets.find((a) => a.id === assetId);
-  if (!asset || asset.status !== "changes_requested") return { ok: false, error: "Nothing to resubmit." };
+  if (!asset) return { error: "Asset not found." };
+  const session = state.session;
+  if (!session || session.role !== "seller" || session.userId !== asset.ownerId) return { error: "Only the seller who owns this asset can edit it." };
+  if (isSuspended(state, session.userId)) return { error: SUSPENDED_MESSAGE };
+  if (asset.status !== "changes_requested") return { error: "This asset can only be edited while changes are requested." };
+  return { asset };
+}
+
+function applyEdit(asset: Asset, p: AssetEditPatch): Asset {
+  return {
+    ...asset,
+    name: p.name.trim(),
+    description: p.description.trim(),
+    assetValueUsd: p.assetValueUsd,
+    targetUsd: p.targetUsd,
+    termMonths: p.termMonths,
+    targetYield: p.returnPct,
+    areaHa: p.areaHa,
+    uploads: p.uploads.map((u) => ({ name: u.name, sizeKb: u.sizeKb })),
+    fundedPct: pctFunded(asset.raisedUsd, p.targetUsd),
+  };
+}
+
+/** Saves corrections without changing the status, so the seller can come back before resubmitting. */
+export function saveAssetEdits(assetId: string, patch: AssetEditPatch): AssetEditResult {
+  const found = editableAsset(assetId);
+  if ("error" in found) return { ok: false, error: found.error };
+  const invalid = validateAssetEdit(patch);
+  if (invalid) return { ok: false, ...invalid };
+  const { asset } = found;
+  const changedFields = changedFieldsOf(asset, patch);
+  if (changedFields.length === 0) return { ok: true, changedFields };
+  const actor = state.session?.name ?? "Seller";
+  const event: ReviewEvent = { id: uid("rev"), at: nowIso(), actor, kind: "edited", changedFields };
   commit({
     ...state,
-    assets: state.assets.map((a) => (a.id === assetId ? { ...a, status: "pending_review", submittedAt: nowIso(), reviewNote: undefined } : a)),
-    notices: [notice("admin", "Asset resubmitted", `${asset.name} (${asset.id}) was updated and resubmitted.`, `/admin/approvals/${asset.id}`), ...state.notices],
-    activity: pushActivity(state, state.session?.name ?? "Seller", "Resubmitted asset for approval", asset.name),
+    assets: state.assets.map((a) => (a.id === assetId ? { ...applyEdit(a, patch), reviewHistory: [...(a.reviewHistory ?? []), event] } : a)),
+    activity: pushActivity(state, actor, `Updated asset details (${changedFields.join(", ")})`, patch.name.trim()),
   });
-  return { ok: true };
+  return { ok: true, changedFields };
+}
+
+/**
+ * Sends a `changes_requested` asset back to the admin queue. With a patch, the corrections are validated and saved in
+ * the same commit that changes the status. The asset is never published by resubmitting.
+ */
+export function resubmitAsset(assetId: string, patch?: AssetEditPatch): AssetEditResult {
+  const found = editableAsset(assetId);
+  if ("error" in found) return { ok: false, error: found.error === "This asset can only be edited while changes are requested." ? "Nothing to resubmit." : found.error };
+  const { asset } = found;
+  if (patch) {
+    const invalid = validateAssetEdit(patch);
+    if (invalid) return { ok: false, ...invalid };
+  }
+  const base = patch ? applyEdit(asset, patch) : asset;
+  const here = patch ? changedFieldsOf(asset, patch) : [];
+  // Everything edited since the last change request, including earlier "Save changes" steps.
+  const history = asset.reviewHistory ?? [];
+  const lastRequest = history.map((e) => e.kind).lastIndexOf("changes_requested");
+  const earlier = history.slice(lastRequest + 1).flatMap((e) => (e.kind === "edited" ? (e.changedFields ?? []) : []));
+  const changedFields = Array.from(new Set([...earlier, ...here]));
+  const actor = state.session?.name ?? "Seller";
+  const at = nowIso();
+  const event: ReviewEvent = {
+    id: uid("rev"),
+    at,
+    actor,
+    kind: "resubmitted",
+    note: changedFields.length ? undefined : "Resubmitted without changes.",
+    changedFields,
+  };
+  const summary = changedFields.length ? ` Updated: ${changedFields.join(", ")}.` : " No fields were changed.";
+  commit({
+    ...state,
+    assets: state.assets.map((a) =>
+      a.id === assetId ? { ...base, status: "pending_review", submittedAt: at, reviewNote: undefined, reviewHistory: [...history, event] } : a,
+    ),
+    notices: [notice("admin", "Asset resubmitted", `${base.name} (${asset.id}) was updated and resubmitted.${summary}`, `/admin/approvals/${asset.id}`), ...state.notices],
+    activity: pushActivity(state, actor, "Resubmitted asset for approval", base.name),
+  });
+  return { ok: true, changedFields };
 }
 
 /* -------------------------------- Investing -------------------------------- */
@@ -264,13 +434,15 @@ export function invest(input: { assetId: string; amountUsd: number; requestId: s
 
   const session = state.session;
   if (!session || session.role !== "investor") return { ok: false, error: "Sign in as an investor to invest." };
+  if (isSuspended(state, session.userId)) return { ok: false, error: SUSPENDED_MESSAGE };
   const asset = state.assets.find((a) => a.id === input.assetId);
   if (!asset) return { ok: false, error: "Asset not found." };
   if (asset.status !== "published") return { ok: false, error: "This asset is not open for investment." };
 
-  const amount = Math.round(input.amountUsd);
+  const amount = input.amountUsd;
   const remaining = remainingUsd(asset);
-  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, error: "Enter an investment amount." };
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return { ok: false, error: "Enter an investment amount." };
+  if (!Number.isSafeInteger(amount)) return { ok: false, error: "Enter the investment amount in whole dollars, without decimals." };
   if (remaining <= 0) return { ok: false, error: "This asset is fully funded." };
   if (amount > remaining) return { ok: false, error: `Only $${remaining.toLocaleString("en-US")} remains to be funded.` };
   if (amount < Math.min(asset.minInvestmentUsd, remaining)) return { ok: false, error: `Minimum investment is $${asset.minInvestmentUsd.toLocaleString("en-US")}.` };
@@ -313,8 +485,11 @@ export function toggleUserStatus(userId: string) {
   const user = state.users.find((u) => u.id === userId);
   if (!user || user.role === "admin") return;
   const status = user.status === "Active" ? "Suspended" : "Active";
+  // Suspending the signed-in user ends that session immediately.
+  const session = status === "Suspended" && state.session?.userId === userId ? null : state.session;
   commit({
     ...state,
+    session,
     users: state.users.map((u) => (u.id === userId ? { ...u, status } : u)),
     activity: pushActivity(state, state.session?.name ?? "Admin Operator", status === "Suspended" ? "Suspended user" : "Reactivated user", user.name),
   });

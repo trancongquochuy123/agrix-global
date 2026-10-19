@@ -1,4 +1,5 @@
 import { polygonAreaHa, scaleToArea, type LatLng } from "@/lib/geo";
+import { describeReason, MAX_AREA_HA, MAX_RETURN_PCT, MAX_TERM_MONTHS, MIN_RETURN_PCT, MIN_TERM_MONTHS, parseCoordinate, parseNumeric, parseQuantity, parseWholeUsd } from "@/lib/numeric";
 import type { AssetCategory } from "@/types/asset";
 
 export const STEPS = ["Asset Type", "Ownership", "Location", "Operations", "Financing", "Review"] as const;
@@ -141,15 +142,44 @@ export const drawnAreaHa = (d: RegisterData) => polygonAreaHa(d.vertices);
 
 export type Errors = Partial<Record<string, string>>;
 
-const positive = (v: string) => v.trim() !== "" && Number.isFinite(Number(v)) && Number(v) > 0;
+export { MAX_AREA_HA, MIN_TERM_MONTHS, MAX_TERM_MONTHS, MAX_RETURN_PCT };
+
+type Num = { ok: true; value: number } | { ok: false; error: string };
+const usdField = (raw: string, what: string): Num => {
+  const r = parseWholeUsd(raw);
+  if (!r.ok) return { ok: false, error: describeReason(r.reason, what) };
+  return r.value > 0 ? r : { ok: false, error: `${what.charAt(0).toUpperCase()}${what.slice(1)} must be greater than 0.` };
+};
+const qtyField = (raw: string, what: string, decimals = 2): Num => {
+  const r = parseQuantity(raw, decimals);
+  if (!r.ok) return { ok: false, error: describeReason(r.reason, what) };
+  return r.value > 0 ? r : { ok: false, error: `${what.charAt(0).toUpperCase()}${what.slice(1)} must be greater than 0.` };
+};
+
+/** Strict parse of the financial/area fields, shared by validation and submission so they can never disagree. */
+export const numbers = {
+  estimatedValue: (raw: string) => usdField(raw, "an estimated value"),
+  financingTarget: (raw: string) => usdField(raw, "the amount you want to raise"),
+  operatingCosts: (raw: string) => usdField(raw, "annual operating costs"),
+  expectedRevenue: (raw: string) => usdField(raw, "expected annual revenue"),
+  totalArea: (raw: string): Num => {
+    const r = qtyField(raw, "the total area in hectares");
+    if (r.ok && r.value > MAX_AREA_HA) return { ok: false, error: `Area cannot exceed ${MAX_AREA_HA.toLocaleString("en-US")} ha.` };
+    return r;
+  },
+  annualProduction: (raw: string) => qtyField(raw, "annual production"),
+  historicalYield: (raw: string) => qtyField(raw, "the historical yield"),
+};
 
 export function validateStep(step: number, d: RegisterData): Errors {
   const e: Errors = {};
   if (step === 0) {
     if (d.assetName.trim().length < 3) e.assetName = "Enter an asset name (at least 3 characters).";
     if (!d.cropType) e.cropType = "Select a crop or project type.";
-    if (!positive(d.estimatedValue)) e.estimatedValue = "Enter an estimated value greater than 0.";
-    if (!positive(d.totalArea)) e.totalArea = "Enter the total area in hectares.";
+    const value = numbers.estimatedValue(d.estimatedValue);
+    if (!value.ok) e.estimatedValue = value.error;
+    const area = numbers.totalArea(d.totalArea);
+    if (!area.ok) e.totalArea = area.error;
   }
   if (step === 1) {
     if (d.ownerName.trim().length < 2) e.ownerName = "Enter the registered owner's name.";
@@ -161,33 +191,39 @@ export function validateStep(step: number, d: RegisterData): Errors {
     if (d.vertices.length < 3) e.boundary = "Draw a boundary with at least 3 points.";
     if (d.address.trim().length < 5) e.address = "Enter the asset address.";
     if (!d.province) e.province = "Select a province or city.";
-    const lat = Number(d.latitude);
-    const lng = Number(d.longitude);
-    if (!Number.isFinite(lat) || lat < -90 || lat > 90) e.latitude = "Latitude must be between -90 and 90.";
-    if (!Number.isFinite(lng) || lng < -180 || lng > 180) e.longitude = "Longitude must be between -180 and 180.";
+    const lat = parseCoordinate(d.latitude);
+    const lng = parseCoordinate(d.longitude);
+    if (!lat.ok || lat.value < -90 || lat.value > 90) e.latitude = "Latitude must be a number between -90 and 90.";
+    if (!lng.ok || lng.value < -180 || lng.value > 180) e.longitude = "Longitude must be a number between -180 and 180.";
   }
   if (step === 3) {
     if (!d.operationsCrop) e.operationsCrop = "Select the primary crop.";
-    if (!positive(d.annualProduction)) e.annualProduction = "Enter annual production greater than 0.";
-    if (!positive(d.historicalYield)) e.historicalYield = "Enter the historical yield.";
+    const production = numbers.annualProduction(d.annualProduction);
+    if (!production.ok) e.annualProduction = production.error;
+    const yld = numbers.historicalYield(d.historicalYield);
+    if (!yld.ok) e.historicalYield = yld.error;
     if (!d.irrigation) e.irrigation = "Select an irrigation method.";
     if (!d.harvestSeason) e.harvestSeason = "Select a harvest season.";
-    if (!positive(d.operatingCosts)) e.operatingCosts = "Enter annual operating costs.";
-    if (!positive(d.expectedRevenue)) e.expectedRevenue = "Enter expected annual revenue.";
+    const costs = numbers.operatingCosts(d.operatingCosts);
+    if (!costs.ok) e.operatingCosts = costs.error;
+    const revenue = numbers.expectedRevenue(d.expectedRevenue);
+    if (!revenue.ok) e.expectedRevenue = revenue.error;
   }
   if (step === 4) {
-    if (!positive(d.financingTarget)) e.financingTarget = "Enter the amount you want to raise.";
-    else if (positive(d.estimatedValue) && Number(d.financingTarget) > Number(d.estimatedValue)) e.financingTarget = "The target cannot exceed the asset value.";
-    const term = Number(d.termMonths);
-    if (!Number.isInteger(term) || term < 1 || term > 36) e.termMonths = "Enter a term between 1 and 36 months.";
-    const ret = Number(d.expectedReturn);
-    if (!positive(d.expectedReturn) || ret > 30) e.expectedReturn = "Enter an illustrative return between 0.1% and 30%.";
+    const target = numbers.financingTarget(d.financingTarget);
+    const value = numbers.estimatedValue(d.estimatedValue);
+    if (!target.ok) e.financingTarget = target.error;
+    else if (value.ok && target.value > value.value) e.financingTarget = "The target cannot exceed the asset value.";
+    const term = parseNumeric(d.termMonths, { maxDecimals: 0 });
+    if (!term.ok || term.value < MIN_TERM_MONTHS || term.value > MAX_TERM_MONTHS) e.termMonths = `Enter a whole number of months between ${MIN_TERM_MONTHS} and ${MAX_TERM_MONTHS}.`;
+    const ret = parseQuantity(d.expectedReturn, 2);
+    if (!ret.ok || ret.value < MIN_RETURN_PCT || ret.value > MAX_RETURN_PCT) e.expectedReturn = `Enter an illustrative return between 0.1% and ${MAX_RETURN_PCT}%.`;
     if (d.description.trim().length < 20) e.description = "Describe the financing purpose (at least 20 characters).";
   }
   return e;
 }
 
-export const money = (v: string, currency: string) =>
-  v.trim() === "" || !Number.isFinite(Number(v))
-    ? "—"
-    : new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(v));
+export const money = (v: string, currency: string) => {
+  const r = parseNumeric(v, { maxDecimals: 2 });
+  return r.ok ? new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(r.value) : "—";
+};

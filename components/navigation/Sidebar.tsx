@@ -7,16 +7,18 @@ import { cn } from "@/lib/utils";
 import { homeOf } from "@/lib/demo/routes";
 import type { Role } from "@/lib/demo/types";
 import { NavList } from "./NavList";
+import { useT } from "@/lib/i18n/react";
 import { SidebarFooter } from "./SidebarFooter";
 
 /** Fixed on desktop (xl), icon rail on tablet that expands as an overlay, hidden on mobile. */
 export function Sidebar({ role, expanded, onToggle }: { role: Role; expanded: boolean; onToggle: () => void }) {
+  const t = useT();
   return (
     <>
       {expanded && (
         <button
           type="button"
-          aria-label="Collapse sidebar"
+          aria-label={t("Collapse sidebar")}
           onClick={onToggle}
           className="fixed inset-0 z-30 hidden bg-forest-950/30 md:block xl:hidden"
         />
@@ -28,7 +30,7 @@ export function Sidebar({ role, expanded, onToggle }: { role: Role; expanded: bo
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between px-4">
-          <Link href={homeOf(role)} aria-label="AGRIX home" className="flex items-center">
+          <Link href={homeOf(role)} aria-label={t("AGRIX home")} className="flex items-center">
             <span className={cn(expanded ? "hidden" : "block xl:hidden")}>
               <LogoMark />
             </span>
@@ -39,7 +41,7 @@ export function Sidebar({ role, expanded, onToggle }: { role: Role; expanded: bo
           <button
             type="button"
             onClick={onToggle}
-            aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+            aria-label={expanded ? t("Collapse sidebar") : t("Expand sidebar")}
             className={cn(
               "rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-50 hover:text-ink xl:hidden",
               !expanded && "hidden",
@@ -52,7 +54,7 @@ export function Sidebar({ role, expanded, onToggle }: { role: Role; expanded: bo
           <button
             type="button"
             onClick={onToggle}
-            aria-label="Expand sidebar"
+            aria-label={t("Expand sidebar")}
             className="mx-auto mb-1 rounded-md p-1.5 text-ink-muted transition-colors hover:bg-green-50 hover:text-ink xl:hidden"
           >
             <PanelLeftOpen className="h-4 w-4" />

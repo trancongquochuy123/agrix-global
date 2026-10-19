@@ -11,6 +11,7 @@ import { fmtDate } from "@/lib/demo/format";
 import { useDemo } from "@/lib/demo/hooks";
 import { signOut, updateProfile } from "@/lib/demo/store";
 import { ROLE_LABEL, type Role } from "@/lib/demo/types";
+import { useT } from "@/lib/i18n/react";
 
 const businessFacts = [
   ["Registration no.", "VN-0412-883-DEMO"],
@@ -22,6 +23,7 @@ const businessFacts = [
 /** One profile screen for all roles. Sellers also see their (sample) business details. */
 export function ProfileView({ role }: { role: Role }) {
   const router = useRouter();
+  const t = useT();
   const { users, session } = useDemo();
   const user = users.find((u) => u.id === session?.userId);
   const [name, setName] = useState(user?.name ?? "");
@@ -33,7 +35,7 @@ export function ProfileView({ role }: { role: Role }) {
     e.preventDefault();
     if (name.trim().length < 2) return setError("Enter your name.");
     updateProfile(user.id, { name: name.trim(), org: org.trim() || user.org });
-    toast.success("Profile saved");
+    toast.success(t("Profile saved"));
   };
 
   return (
@@ -41,11 +43,11 @@ export function ProfileView({ role }: { role: Role }) {
       <PageHeader title={role === "seller" ? "Business Profile" : "Profile"} subtitle="Your account details in this demo workspace." />
       <div className="grid gap-5 lg:grid-cols-3">
         <form onSubmit={save} noValidate className="card space-y-4 p-5 lg:col-span-2">
-          <h2 className="text-base font-bold">{role === "seller" ? "Business details" : "Account details"}</h2>
+          <h2 className="text-base font-bold">{role === "seller" ? t("Business details") : t("Account details")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="pf-name" className="mb-1.5 block text-sm font-semibold">
-                Full name
+                {t("Full name")}
               </label>
               <input
                 id="pf-name"
@@ -59,56 +61,56 @@ export function ProfileView({ role }: { role: Role }) {
               />
               {error && (
                 <p role="alert" className="mt-1 text-xs text-danger">
-                  {error}
+                  {t(error)}
                 </p>
               )}
             </div>
             <div>
               <label htmlFor="pf-org" className="mb-1.5 block text-sm font-semibold">
-                {role === "seller" ? "Business name" : "Organisation"}
+                {role === "seller" ? t("Business name") : t("Organisation")}
               </label>
               <input id="pf-org" value={org} onChange={(e) => setOrg(e.target.value)} className="field" />
             </div>
             <div>
               <label htmlFor="pf-email" className="mb-1.5 block text-sm font-semibold">
-                Email
+                {t("Email")}
               </label>
               <input id="pf-email" value={user.email} disabled className="field" />
             </div>
             <div>
               <label htmlFor="pf-role" className="mb-1.5 block text-sm font-semibold">
-                Role
+                {t("Role")}
               </label>
-              <input id="pf-role" value={ROLE_LABEL[role]} disabled className="field" />
+              <input id="pf-role" value={t(ROLE_LABEL[role])} disabled className="field" />
             </div>
           </div>
           {role === "seller" && (
             <dl className="grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
               {businessFacts.map(([k, v]) => (
                 <div key={k}>
-                  <dt className="text-xs text-ink-muted">{k}</dt>
-                  <dd className="text-sm font-semibold">{v}</dd>
+                  <dt className="text-xs text-ink-muted">{t(k)}</dt>
+                  <dd className="text-sm font-semibold">{t(v)}</dd>
                 </div>
               ))}
             </dl>
           )}
-          <Button type="submit">Save changes</Button>
+          <Button type="submit">{t("Save changes")}</Button>
         </form>
 
         <div className="space-y-5">
           <section className="card p-5">
             <h2 className="flex items-center gap-2 text-base font-bold">
-              <ShieldCheck className="h-4 w-4 text-green-600" aria-hidden="true" /> Verification
+              <ShieldCheck className="h-4 w-4 text-green-600" aria-hidden="true" /> {t("Verification")}
             </h2>
-            <p className="mt-2 text-sm font-semibold">{user.kyc}</p>
-            <p className="mt-1 text-xs text-ink-muted">Onboarding checks are simulated in this prototype. No identity documents are collected.</p>
-            <p className="mt-3 text-xs text-ink-muted">Member since {fmtDate(user.joined)}</p>
+            <p className="mt-2 text-sm font-semibold">{t(user.kyc)}</p>
+            <p className="mt-1 text-xs text-ink-muted">{t("Onboarding checks are simulated in this prototype. No identity documents are collected.")}</p>
+            <p className="mt-3 text-xs text-ink-muted">{t("Member since {date}", { date: fmtDate(user.joined) })}</p>
           </section>
           <section className="card space-y-2 p-5">
-            <h2 className="text-base font-bold">Session</h2>
+            <h2 className="text-base font-bold">{t("Session")}</h2>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/auth/login">
-                <Repeat className="h-4 w-4" aria-hidden="true" /> Switch demo account
+                <Repeat className="h-4 w-4" aria-hidden="true" /> {t("Switch demo account")}
               </Link>
             </Button>
             <Button
@@ -117,10 +119,10 @@ export function ProfileView({ role }: { role: Role }) {
               onClick={() => {
                 signOut();
                 router.push("/");
-                toast("Signed out", { description: "Demo session ended." });
+                toast(t("Signed out"), { description: t("Demo session ended.") });
               }}
             >
-              <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
+              <LogOut className="h-4 w-4" aria-hidden="true" /> {t("Sign out")}
             </Button>
           </section>
         </div>

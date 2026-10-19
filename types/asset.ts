@@ -10,6 +10,16 @@ export interface UploadedDocMeta {
   sizeKb: number;
 }
 
+export interface ReviewEvent {
+  id: string;
+  at: string;
+  actor: string;
+  kind: "approved" | "rejected" | "changes_requested" | "edited" | "resubmitted";
+  note?: string;
+  /** Labels of the fields the seller changed (edited / resubmitted). */
+  changedFields?: string[];
+}
+
 export interface Asset {
   id: string;
   slug: string;
@@ -40,6 +50,8 @@ export interface Asset {
   submittedAt?: string;
   reviewedAt?: string;
   reviewNote?: string;
+  /** Append-only record of admin decisions and seller corrections. */
+  reviewHistory?: ReviewEvent[];
   /** Names of files the seller attached (simulated upload). */
   uploads: UploadedDocMeta[];
 }

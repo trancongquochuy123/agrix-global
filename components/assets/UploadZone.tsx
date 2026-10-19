@@ -5,6 +5,7 @@ import { FileText, UploadCloud, X } from "lucide-react";
 import { toast } from "sonner";
 import type { UploadedFile } from "./formModel";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const MAX_MB = 10;
 
@@ -25,6 +26,7 @@ export function UploadZone({
   label?: string;
   hint?: string;
 }) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -35,11 +37,11 @@ export function UploadZone({
     for (const f of Array.from(list)) {
       const ext = `.${f.name.split(".").pop()?.toLowerCase() ?? ""}`;
       if (!allowed.includes(ext)) {
-        toast.error(`${f.name} was skipped`, { description: `Unsupported file type. Allowed: ${accept}` });
+        toast.error(t("{name} was skipped", { name: f.name }), { description: t("Unsupported file type. Allowed: {types}", { types: accept }) });
         continue;
       }
       if (f.size > MAX_MB * 1024 * 1024) {
-        toast.error(`${f.name} was skipped`, { description: `Files must be smaller than ${MAX_MB} MB.` });
+        toast.error(t("{name} was skipped", { name: f.name }), { description: t("Files must be smaller than {n} MB.", { n: MAX_MB }) });
         continue;
       }
       next.push({ name: f.name, sizeKb: Math.max(1, Math.round(f.size / 1024)) });
@@ -68,9 +70,9 @@ export function UploadZone({
       >
         <UploadCloud className="h-8 w-8 text-green-600" aria-hidden="true" />
         <label htmlFor={id} className="mt-2 cursor-pointer text-sm font-semibold after:absolute after:inset-0">
-          {label}
+          {t(label)}
         </label>
-        <p className="mt-1 text-xs text-ink-muted">{hint}</p>
+        <p className="mt-1 text-xs text-ink-muted">{t(hint)}</p>
         <input
           ref={inputRef}
           id={id}
@@ -82,7 +84,7 @@ export function UploadZone({
         />
       </div>
       {files.length > 0 && (
-        <ul className="mt-3 space-y-2" aria-label="Uploaded files">
+        <ul className="mt-3 space-y-2" aria-label={t("Uploaded files")}>
           {files.map((f, i) => (
             <li key={`${f.name}-${i}`} className="flex items-center gap-3 rounded-lg border border-line bg-white px-3 py-2 text-sm">
               <FileText className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
@@ -90,7 +92,7 @@ export function UploadZone({
               <span className="text-xs text-ink-muted">{f.sizeKb >= 1024 ? `${(f.sizeKb / 1024).toFixed(1)} MB` : `${f.sizeKb} KB`}</span>
               <button
                 type="button"
-                aria-label={`Remove ${f.name}`}
+                aria-label={t("Remove {name}", { name: f.name })}
                 onClick={() => onChange(files.filter((_, idx) => idx !== i))}
                 className="rounded p-1 text-ink-muted transition-colors hover:bg-green-50 hover:text-danger"
               >

@@ -1,5 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { groupDigits, parseWholeUsd } from "@/lib/numeric";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 export function Field({
   id,
@@ -18,10 +22,11 @@ export function Field({
   children: ReactNode;
   className?: string;
 }) {
+  const t = useT();
   return (
     <div className={className}>
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">
-        {label}
+        {t(label)}
         {required && (
           <span aria-hidden="true" className="ml-0.5 text-danger">
             *
@@ -29,10 +34,10 @@ export function Field({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-ink-muted">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-ink-muted">{t(hint)}</p>}
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-1 text-xs font-medium text-danger">
-          {error}
+          {t(error)}
         </p>
       )}
     </div>
@@ -47,17 +52,19 @@ export const inputProps = (id: string, error?: string) => ({
 });
 
 export function InputWithSuffix({ suffix, children }: { suffix: string; children: ReactNode }) {
+  const t = useT();
   return (
     <div className="relative">
       {children}
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">{suffix}</span>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">{t(suffix)}</span>
     </div>
   );
 }
 
-const group = (n: string) => n.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-/** Text input that shows thousands separators (4,800,000) while the form keeps the raw digits. */
+/**
+ * Whole-dollar text input. It shows exactly what was typed or pasted and adds thousands separators (4,800,000) on blur
+ * when the value is a valid number, so the field's validation error describes what the user can see. Nothing is stripped.
+ */
 export function MoneyInput({
   id,
   error,
@@ -73,8 +80,7 @@ export function MoneyInput({
   currency: string;
   placeholder?: string;
 }) {
-  const [int, dec] = value.split(".");
-  const display = value === "" ? "" : `${group(int)}${dec !== undefined ? `.${dec}` : ""}`;
+  const t = useT();
   return (
     <div className="relative">
       <input
@@ -83,12 +89,12 @@ export function MoneyInput({
         type="text"
         inputMode="decimal"
         autoComplete="off"
-        value={display}
-        placeholder={placeholder}
-        onChange={(e) => {
-          const cleaned = e.target.value.replace(/[^\d.]/g, "");
-          const [i, ...rest] = cleaned.split(".");
-          onChange(rest.length ? `${i}.${rest.join("").slice(0, 2)}` : i);
+        value={value}
+        placeholder={placeholder ? t(placeholder) : undefined}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => {
+          const r = parseWholeUsd(value);
+          if (r.ok) onChange(groupDigits(String(r.value)));
         }}
       />
       <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-ink-muted">{currency}</span>

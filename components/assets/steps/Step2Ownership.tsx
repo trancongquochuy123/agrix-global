@@ -1,9 +1,13 @@
+"use client";
+
 import { Field, inputProps } from "../FormField";
 import { ownershipTypes } from "../formModel";
 import { UploadZone } from "../UploadZone";
 import type { StepProps } from "./StepProps";
+import { useT } from "@/lib/i18n/react";
 
 export function Step2Ownership({ data, update, errors }: StepProps) {
+  const t = useT();
   const today = new Date().toISOString().slice(0, 10);
   return (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -16,7 +20,9 @@ export function Step2Ownership({ data, update, errors }: StepProps) {
       <Field id="ownershipType" label="Ownership type" required>
         <select {...inputProps("ownershipType")} value={data.ownershipType} onChange={(e) => update({ ownershipType: e.target.value })}>
           {ownershipTypes.map((o) => (
-            <option key={o}>{o}</option>
+            <option key={o} value={o}>
+              {t(o)}
+            </option>
           ))}
         </select>
       </Field>
@@ -25,14 +31,14 @@ export function Step2Ownership({ data, update, errors }: StepProps) {
           {...inputProps("certificateNumber", errors.certificateNumber)}
           value={data.certificateNumber}
           onChange={(e) => update({ certificateNumber: e.target.value })}
-          placeholder="e.g. CS 01234/DL"
+          placeholder={t("e.g. CS 01234/DL")}
         />
       </Field>
       <Field id="issueDate" label="Issue date" required error={errors.issueDate}>
         <input {...inputProps("issueDate", errors.issueDate)} type="date" max={today} value={data.issueDate} onChange={(e) => update({ issueDate: e.target.value })} />
       </Field>
       <div className="sm:col-span-2">
-        <p className="mb-1.5 text-sm font-semibold">Land certificate &amp; supporting documents</p>
+        <p className="mb-1.5 text-sm font-semibold">{t("Land certificate & supporting documents")}</p>
         <UploadZone id="ownership-docs" files={data.documents} onChange={(documents) => update({ documents })} />
       </div>
     </div>

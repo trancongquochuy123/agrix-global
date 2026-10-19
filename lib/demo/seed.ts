@@ -59,6 +59,32 @@ const baseTransactions: Transaction[] = [
   tx(9, "GH-CC-005", "Ghana Cocoa", ["u-i2", "Sofia Alvarez"], 12_000, 3),
 ];
 
+/**
+ * Earlier investments by investors not listed individually. One labelled aggregate per asset closes the gap between
+ * the named transactions above and the funding already raised, so ledger totals equal each asset's raised amount.
+ */
+const openingBalances: Transaction[] = baseAssets
+  .filter((a) => a.raisedUsd > 0)
+  .map((a) => {
+    const named = baseTransactions.filter((t) => t.assetId === a.id);
+    const namedInvestors = new Set(named.map((t) => t.investorId)).size;
+    const count = Math.max(1, a.investors - namedInvestors);
+    return {
+      id: `tx-open-${a.id}`,
+      reference: `TX-OPEN-${a.id.split("-")[1]}`,
+      requestId: `seed-open-${a.id}`,
+      assetId: a.id,
+      assetName: a.name,
+      investorId: `pool-${a.id}`,
+      investorName: `Other investors (${count})`,
+      amountUsd: a.raisedUsd - named.reduce((n, t) => n + t.amountUsd, 0),
+      createdAt: iso(130),
+      status: "Completed" as const,
+      kind: "opening" as const,
+      investmentCount: count,
+    };
+  });
+
 const notice = (id: string, to: Notice["to"], title: string, body: string, daysAgo: number, read = false, href?: string): Notice => ({
   id,
   to,
@@ -99,7 +125,7 @@ const D = (n: number, hour = 8) => iso(n, hour);
 
 export function buildState(id: ScenarioId, session: Session | null): DemoState {
   let assets: Asset[] = [...baseAssets];
-  let transactions = [...baseTransactions];
+  let transactions = [...baseTransactions, ...openingBalances];
   let notices = [...baseNotices];
   let activity = [...baseActivity];
 

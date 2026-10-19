@@ -12,6 +12,7 @@ import { registerUser, signInAs, signInWithEmail } from "@/lib/demo/store";
 import { DEMO_ACCOUNTS } from "@/lib/demo/seed";
 import { ROLE_LABEL, type Role } from "@/lib/demo/types";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 const roleMeta: Record<Role, { icon: LucideIcon; blurb: string }> = {
   investor: { icon: TrendingUp, blurb: "Browse assets, invest and track your portfolio." },
@@ -23,11 +24,12 @@ const roleMeta: Record<Role, { icon: LucideIcon; blurb: string }> = {
 const safeNext = (next: string | null) => (next && next.startsWith("/") && !next.startsWith("//") ? next : null);
 
 function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle: string; children: ReactNode; footer?: ReactNode }) {
+  const t = useT();
   return (
     <div className="mx-auto w-full max-w-md py-6 sm:py-10">
       <div className="card p-6 sm:p-8">
-        <h1 className="text-2xl font-extrabold sm:text-3xl">{title}</h1>
-        <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p>
+        <h1 className="text-2xl font-extrabold sm:text-3xl">{t(title)}</h1>
+        <p className="mt-1.5 text-sm text-ink-muted">{t(subtitle)}</p>
         <div className="mt-6">{children}</div>
       </div>
       {footer && <p className="mt-5 text-center text-sm text-ink-muted">{footer}</p>}
@@ -36,15 +38,16 @@ function AuthCard({ title, subtitle, children, footer }: { title: string; subtit
 }
 
 function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: ReactNode }) {
+  const t = useT();
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">
-        {label}
+        {t(label)}
       </label>
       {children}
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-1 text-xs text-danger">
-          {error}
+          {t(error)}
         </p>
       )}
     </div>
@@ -54,11 +57,12 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
 const emailOk = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
 
 function DemoAccountList({ onPick }: { onPick: (role: Role) => void }) {
+  const t = useT();
   return (
     <div>
       <div className="relative my-6 text-center">
         <span className="absolute inset-x-0 top-1/2 h-px bg-line" aria-hidden="true" />
-        <span className="relative bg-white px-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">Or enter a demo account</span>
+        <span className="relative bg-white px-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">{t("Or enter a demo account")}</span>
       </div>
       <ul className="space-y-2">
         {(Object.keys(DEMO_ACCOUNTS) as Role[]).map((r) => {
@@ -74,7 +78,7 @@ function DemoAccountList({ onPick }: { onPick: (role: Role) => void }) {
                   <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold">{ROLE_LABEL[r]}</span>
+                  <span className="block text-sm font-semibold">{t(ROLE_LABEL[r])}</span>
                   <span className="block truncate text-xs text-ink-muted">{DEMO_ACCOUNTS[r].email}</span>
                 </span>
                 <ArrowRight className="h-4 w-4 text-ink-muted" aria-hidden="true" />
@@ -83,12 +87,13 @@ function DemoAccountList({ onPick }: { onPick: (role: Role) => void }) {
           );
         })}
       </ul>
-      <p className="mt-3 text-xs text-ink-muted">Demo sign-in only. Passwords are not checked and no real account is created.</p>
+      <p className="mt-3 text-xs text-ink-muted">{t("Demo sign-in only. Passwords are not checked and no real account is created.")}</p>
     </div>
   );
 }
 
 function LoginForm() {
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
@@ -106,7 +111,7 @@ function LoginForm() {
     if (!password) return setError("Enter a password (any value works in the demo).");
     const res = signInWithEmail(email);
     if (!res.ok) return setError(res.error);
-    toast.success("Signed in (demo)");
+    toast.success(t("Signed in (demo)"));
     go(res.role);
   };
 
@@ -116,9 +121,9 @@ function LoginForm() {
       subtitle="Welcome back to AGRIX."
       footer={
         <>
-          New to AGRIX?{" "}
+          {t("New to AGRIX?")}{" "}
           <Link href={`/auth/register${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-green-700 hover:underline">
-            Create an account
+            {t("Create an account")}
           </Link>
         </>
       }
@@ -127,10 +132,10 @@ function LoginForm() {
         <div className="mb-5 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
           <span className="min-w-0 flex-1">
-            Signed in as <strong>{session.name}</strong> ({ROLE_LABEL[session.role]})
+            {t("Signed in as")} <strong>{session.name}</strong> ({t(ROLE_LABEL[session.role])})
           </span>
           <Link href={homeOf(session.role)} className="font-semibold text-green-700 hover:underline">
-            Open
+            {t("Open")}
           </Link>
         </div>
       )}
@@ -166,17 +171,22 @@ function LoginForm() {
         </Field>
         <div className="flex justify-end">
           <Link href="/auth/forgot-password" className="text-sm font-semibold text-green-700 hover:underline">
-            Forgot password?
+            {t("Forgot password?")}
           </Link>
         </div>
         <Button type="submit" size="lg" className="w-full">
-          Log in
+          {t("Log in")}
         </Button>
       </form>
       <DemoAccountList
         onPick={(r) => {
-          signInAs(r);
-          toast.success(`Signed in as ${ROLE_LABEL[r]} (demo)`);
+          const res = signInAs(r);
+          if (!res.ok) {
+            setError(res.error);
+            toast.error(t(res.error));
+            return;
+          }
+          toast.success(t("Signed in as {role} (demo)", { role: t(ROLE_LABEL[r]) }));
           go(r);
         }}
       />
@@ -193,6 +203,7 @@ export function LoginView() {
 }
 
 function RegisterForm() {
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
@@ -214,7 +225,7 @@ function RegisterForm() {
     if (Object.keys(found).length) return setErrors(found);
     const res = registerUser({ name: form.name, email: form.email, role, org: form.org });
     if (!res.ok) return setErrors({ email: res.error });
-    toast.success("Demo account created", { description: "Simulated sign-up. No identity check is performed." });
+    toast.success(t("Demo account created"), { description: t("Simulated sign-up. No identity check is performed.") });
     router.push(next && next.startsWith(`/${role}`) ? next : homeOf(role));
   };
 
@@ -224,16 +235,16 @@ function RegisterForm() {
       subtitle="Choose how you will use AGRIX."
       footer={
         <>
-          Already have an account?{" "}
+          {t("Already have an account?")}{" "}
           <Link href="/auth/login" className="font-semibold text-green-700 hover:underline">
-            Log in
+            {t("Log in")}
           </Link>
         </>
       }
     >
       <form onSubmit={submit} noValidate className="space-y-4">
         <fieldset>
-          <legend className="mb-1.5 text-sm font-semibold">I want to</legend>
+          <legend className="mb-1.5 text-sm font-semibold">{t("I want to")}</legend>
           <div className="grid grid-cols-2 gap-2">
             {(["investor", "seller"] as const).map((r) => {
               const Icon = roleMeta[r].icon;
@@ -248,9 +259,9 @@ function RegisterForm() {
                   <input type="radio" name="role" value={r} checked={role === r} onChange={() => setRole(r)} className="sr-only" />
                   <span className="flex items-center gap-2 font-semibold">
                     <Icon className="h-4 w-4 text-green-600" aria-hidden="true" />
-                    {r === "investor" ? "Invest" : "Sell an asset"}
+                    {r === "investor" ? t("Invest") : t("Sell an asset")}
                   </span>
-                  <span className="text-xs text-ink-muted">{roleMeta[r].blurb}</span>
+                  <span className="text-xs text-ink-muted">{t(roleMeta[r].blurb)}</span>
                 </label>
               );
             })}
@@ -269,9 +280,9 @@ function RegisterForm() {
           <input id="password" type="password" autoComplete="new-password" value={form.password} onChange={set("password")} className={cn("field", errors.password && "field-error")} />
         </Field>
         <Button type="submit" size="lg" className="w-full">
-          Create account
+          {t("Create account")}
         </Button>
-        <p className="text-xs text-ink-muted">Demo sign-up: no verification is performed and nothing leaves your browser.</p>
+        <p className="text-xs text-ink-muted">{t("Demo sign-up: no verification is performed and nothing leaves your browser.")}</p>
       </form>
     </AuthCard>
   );
@@ -286,6 +297,7 @@ export function RegisterView() {
 }
 
 export function ForgotPasswordView() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string>();
   const [sent, setSent] = useState(false);
@@ -302,20 +314,20 @@ export function ForgotPasswordView() {
       subtitle="Enter your email and we will send a reset link."
       footer={
         <Link href="/auth/login" className="font-semibold text-green-700 hover:underline">
-          Back to log in
+          {t("Back to log in")}
         </Link>
       }
     >
       {sent ? (
         <div role="status" className="rounded-xl bg-green-50 p-4 text-sm">
           <p className="flex items-center gap-2 font-semibold text-green-700">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Reset link sent (simulated)
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {t("Reset link sent (simulated)")}
           </p>
           <p className="mt-1.5 text-ink-muted">
-            If <strong className="text-ink">{email}</strong> were a real account, an email would be on its way. No message is sent in this prototype, so use a demo account to continue.
+            {t("If")} <strong className="text-ink">{email}</strong> {t("were a real account, an email would be on its way. No message is sent in this prototype, so use a demo account to continue.")}
           </p>
           <Button asChild className="mt-4">
-            <Link href="/auth/login">Go to log in</Link>
+            <Link href="/auth/login">{t("Go to log in")}</Link>
           </Button>
         </div>
       ) : (
@@ -334,7 +346,7 @@ export function ForgotPasswordView() {
             />
           </Field>
           <Button type="submit" size="lg" className="w-full">
-            Send reset link
+            {t("Send reset link")}
           </Button>
         </form>
       )}
@@ -343,11 +355,12 @@ export function ForgotPasswordView() {
 }
 
 export function RoleSelectView() {
+  const t = useT();
   const router = useRouter();
   return (
     <div className="mx-auto w-full max-w-3xl py-6 sm:py-10">
-      <h1 className="text-center text-2xl font-extrabold sm:text-3xl">Choose a workspace</h1>
-      <p className="mx-auto mt-2 max-w-md text-center text-sm text-ink-muted">Enter AGRIX with one of the demo accounts. Each role has its own dashboard and navigation.</p>
+      <h1 className="text-center text-2xl font-extrabold sm:text-3xl">{t("Choose a workspace")}</h1>
+      <p className="mx-auto mt-2 max-w-md text-center text-sm text-ink-muted">{t("Enter AGRIX with one of the demo accounts. Each role has its own dashboard and navigation.")}</p>
       <ul className="mt-8 grid gap-4 sm:grid-cols-3">
         {(Object.keys(DEMO_ACCOUNTS) as Role[]).map((r) => {
           const Icon = roleMeta[r].icon;
@@ -356,7 +369,11 @@ export function RoleSelectView() {
               <button
                 type="button"
                 onClick={() => {
-                  signInAs(r);
+                  const res = signInAs(r);
+                  if (!res.ok) {
+                    toast.error(t(res.error));
+                    return;
+                  }
                   router.push(homeOf(r));
                 }}
                 className="card flex h-full w-full flex-col items-start gap-3 p-5 text-left transition-colors hover:border-green-600/50 hover:bg-green-50/40"
@@ -364,15 +381,15 @@ export function RoleSelectView() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-green-600">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="text-lg font-bold">{ROLE_LABEL[r]}</span>
-                <span className="text-sm text-ink-muted">{roleMeta[r].blurb}</span>
+                <span className="text-lg font-bold">{t(ROLE_LABEL[r])}</span>
+                <span className="text-sm text-ink-muted">{t(roleMeta[r].blurb)}</span>
                 <span className="mt-auto text-xs text-ink-muted">{DEMO_ACCOUNTS[r].email}</span>
               </button>
             </li>
           );
         })}
       </ul>
-      <p className="mt-6 text-center text-xs text-ink-muted">Demo sign-in only. No password is checked.</p>
+      <p className="mt-6 text-center text-xs text-ink-muted">{t("Demo sign-in only. No password is checked.")}</p>
     </div>
   );
 }

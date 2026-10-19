@@ -2,6 +2,7 @@
 
 import { useMemo, useId } from "react";
 import type { TwinLayer } from "@/types/intelligence";
+import { useT } from "@/lib/i18n/react";
 
 const COLS = 30;
 const ROWS = 20;
@@ -79,6 +80,7 @@ function field(x: number, y: number, layer: TwinLayer) {
 }
 
 export function NdviMap({ layer, step }: { layer: TwinLayer; step: number }) {
+  const t = useT();
   const id = useId();
   const season = SEASON[layer][Math.max(0, Math.min(4, step))];
 
@@ -100,7 +102,7 @@ export function NdviMap({ layer, step }: { layer: TwinLayer; step: number }) {
       preserveAspectRatio="xMidYMid meet"
       className="h-full w-full"
       role="img"
-      aria-label={`${layerMeta[layer].label} heat-map for ${["July", "August", "September", "October", "November"][step]} 2026`}
+      aria-label={t("{layer} heat-map for {month} 2026", { layer: t(layerMeta[layer].label), month: t(["July", "August", "September", "October", "November"][step]) })}
     >
       <defs>
         <clipPath id={`${id}-clip`}>
@@ -115,8 +117,8 @@ export function NdviMap({ layer, step }: { layer: TwinLayer; step: number }) {
       <g clipPath={`url(#${id}-clip)`}>
         <g filter={`url(#${id}-soft)`}>
           {cells.map((c, i) => {
-            const t = layer === "elevation" ? c.v : Math.max(0, Math.min(1, c.v * (0.55 + season * 0.6)));
-            return <rect key={i} x={c.x - 1} y={c.y - 1} width={CW + 2} height={CH + 2} fill={colorAt(layer, t)} style={{ transition: "fill 260ms ease" }} />;
+            const v = layer === "elevation" ? c.v : Math.max(0, Math.min(1, c.v * (0.55 + season * 0.6)));
+            return <rect key={i} x={c.x - 1} y={c.y - 1} width={CW + 2} height={CH + 2} fill={colorAt(layer, v)} style={{ transition: "fill 260ms ease" }} />;
           })}
         </g>
         {/* Field rows */}

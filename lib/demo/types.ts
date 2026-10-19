@@ -37,6 +37,10 @@ export interface Transaction {
   amountUsd: number;
   createdAt: string;
   status: "Completed";
+  /** "opening": seeded aggregate of earlier investments by several investors, so the ledger reconciles with funding totals. */
+  kind?: "opening";
+  /** Number of individual investments an aggregate entry stands for (defaults to 1). */
+  investmentCount?: number;
 }
 
 export interface Notice {

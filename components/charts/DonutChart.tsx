@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartTooltip } from "./ChartPrimitives";
+import { useT } from "@/lib/i18n/react";
 
 export interface DonutDatum {
   name: string;
@@ -21,8 +22,9 @@ export function DonutChart({
   ariaLabel: string;
   tooltipFormat?: (v: number, name: string) => string;
 }) {
+  const t = useT();
   return (
-    <div role="img" aria-label={ariaLabel} className="relative h-full min-h-[190px] w-full">
+    <div role="img" aria-label={t(ariaLabel)} className="relative h-full min-h-[190px] w-full">
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <PieChart>
           <Tooltip content={<ChartTooltip format={tooltipFormat} />} />

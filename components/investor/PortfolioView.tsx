@@ -17,9 +17,11 @@ import { performanceSeries, portfolioTotals, positionsOf } from "@/lib/demo/sele
 import { useNow } from "@/lib/demo/useNow";
 import { allocationOf } from "./InvestorDashboard";
 import { PositionsTable } from "./PositionsTable";
+import { useT } from "@/lib/i18n/react";
 
 export function PortfolioView() {
   const demo = useDemo();
+  const t = useT();
   const now = useNow();
   const me = demo.session!;
   const positions = positionsOf(demo, me.userId, now);
@@ -47,7 +49,7 @@ export function PortfolioView() {
           description="Investments you confirm will appear here with their value, accrual and maturity date."
           action={
             <Button asChild>
-              <Link href="/investor/marketplace">Explore opportunities</Link>
+              <Link href="/investor/marketplace">{t("Explore opportunities")}</Link>
             </Button>
           }
         />
@@ -73,13 +75,13 @@ export function PortfolioView() {
           <div className="flex flex-col gap-5">
             <ChartCard title="Allocation" bodyClassName="flex items-center gap-4">
               <div className="h-32 w-32 shrink-0">
-                <DonutChart ariaLabel={`Allocation: ${allocation.map((a) => a.name).join(", ")}`} data={allocation} tooltipFormat={(v) => usd(v)} />
+                <DonutChart ariaLabel={`${t("Allocation")}: ${allocation.map((a) => t(a.name)).join(", ")}`} data={allocation} tooltipFormat={(v) => usd(v)} />
               </div>
               <ul className="min-w-0 flex-1 space-y-1.5 text-sm">
                 {allocation.map((a) => (
                   <li key={a.name} className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: a.color }} aria-hidden="true" />
-                    <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                    <span className="min-w-0 flex-1 truncate">{t(a.name)}</span>
                     <span className="figure font-semibold">{Math.round((a.value / totals.value) * 100)}%</span>
                   </li>
                 ))}
@@ -89,7 +91,7 @@ export function PortfolioView() {
               <ul className="divide-y divide-line">
                 {upcoming.map((p) => (
                   <li key={p.asset.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                    <span className="min-w-0 truncate font-semibold">{p.asset.name}</span>
+                    <span className="min-w-0 truncate font-semibold">{t(p.asset.name)}</span>
                     <span className="shrink-0 text-xs text-ink-muted">{fmtDate(p.maturesAt)}</span>
                   </li>
                 ))}
@@ -98,7 +100,7 @@ export function PortfolioView() {
           </div>
         </div>
       )}
-      <p className="mt-6 text-xs text-ink-muted">Simulated portfolio. Accrual is pro-rated from each asset&apos;s illustrative annualised return and is not guaranteed.</p>
+      <p className="mt-6 text-xs text-ink-muted">{t("Simulated portfolio. Accrual is pro-rated from each asset's illustrative annualised return and is not guaranteed.")}</p>
     </div>
   );
 }

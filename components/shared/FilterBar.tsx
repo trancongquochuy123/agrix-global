@@ -3,10 +3,12 @@
 import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/react";
 
 export function FilterBar({ children, className }: { children: ReactNode; className?: string }) {
+  const t = useT();
   return (
-    <div role="toolbar" aria-label="Filters" className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div role="toolbar" aria-label={t("Filters")} className={cn("flex flex-wrap items-center gap-2", className)}>
       {children}
     </div>
   );
@@ -27,7 +29,7 @@ export function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-10 items-center gap-1.5 rounded-lg border px-4 text-sm font-medium transition-colors duration-150",
+        "inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-4 text-sm font-medium transition-colors duration-150",
         active
           ? "border-green-600 bg-green-600 text-white"
           : "border-line bg-white text-ink hover:bg-green-50",
@@ -59,9 +61,10 @@ export function FilterSelect({
   icon?: ReactNode;
   className?: string;
 }) {
+  const t = useT();
   return (
     <label className={cn("relative inline-flex items-center", className)}>
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{t(label)}</span>
       {icon && <span className="pointer-events-none absolute left-3 text-ink-muted">{icon}</span>}
       <select
         value={value}
@@ -73,7 +76,7 @@ export function FilterSelect({
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </option>
         ))}
       </select>

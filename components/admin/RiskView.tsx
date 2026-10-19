@@ -13,6 +13,7 @@ import { getAssetDetail } from "@/data/assets";
 import { usd } from "@/lib/demo/format";
 import { useDemo } from "@/lib/demo/hooks";
 import type { Asset } from "@/types/asset";
+import { useT } from "@/lib/i18n/react";
 
 interface Row {
   asset: Asset;
@@ -22,6 +23,7 @@ interface Row {
 
 export function RiskView() {
   const router = useRouter();
+  const t = useT();
   const { assets } = useDemoAssets();
   const rows: Row[] = assets
     .map((asset) => {
@@ -37,7 +39,7 @@ export function RiskView() {
     { key: "asset", header: "Asset", sortValue: (r) => r.asset.name, render: (r) => <AssetCell asset={r.asset} /> },
     { key: "score", header: "AI risk score", align: "right", sortValue: (r) => r.score, render: (r) => <span className="figure font-semibold">{r.score}</span> },
     { key: "risk", header: "Level", render: (r) => <RiskBadge level={r.asset.risk} /> },
-    { key: "factor", header: "Top factor", render: (r) => <span className="text-ink-muted">{r.topFactor}</span> },
+    { key: "factor", header: "Top factor", render: (r) => <span className="text-ink-muted">{t(r.topFactor)}</span> },
     { key: "exp", header: "Exposure", align: "right", sortValue: (r) => r.asset.raisedUsd, render: (r) => <span className="figure">{usd(r.asset.raisedUsd)}</span> },
   ];
 
@@ -55,7 +57,7 @@ export function RiskView() {
           columns={columns}
           rows={rows}
           rowKey={(r) => r.asset.id}
-          rowLabel={(r) => `Open ${r.asset.name}`}
+          rowLabel={(r) => t("Open {name}", { name: t(r.asset.name) })}
           onRowClick={(r) => router.push(r.asset.status === "pending_review" ? `/admin/approvals/${r.asset.id}` : `/marketplace/${r.asset.slug}`)}
           minWidth="min-w-[680px]"
           mobileCard={(r) => (
@@ -63,13 +65,13 @@ export function RiskView() {
               <AssetCell asset={r.asset} />
               <div className="flex items-center justify-between text-xs">
                 <RiskBadge level={r.asset.risk} />
-                <span className="figure text-ink-muted">Score {r.score}</span>
+                <span className="figure text-ink-muted">{t("Score {n}", { n: r.score })}</span>
               </div>
             </div>
           )}
         />
       </ChartCard>
-      <p className="mt-4 text-xs text-ink-muted">Demo analysis built from predefined data. Not independent verification.</p>
+      <p className="mt-4 text-xs text-ink-muted">{t("Demo analysis built from predefined data. Not independent verification.")}</p>
     </div>
   );
 }
